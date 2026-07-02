@@ -1,0 +1,38 @@
+name: Terraform Validate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-validate.yml"
+  pull_request:
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-validate.yml"
+
+jobs:
+  validate:
+    name: fmt + validate (no credentials, no apply)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+
+      - name: terraform fmt -check
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: terraform init (no backend, no credentials)
+        working-directory: terraform
+        run: terraform init -backend=false -input=false
+
+      - name: terraform validate
+        working-directory: terraform
+        run: terraform validate

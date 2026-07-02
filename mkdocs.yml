@@ -1,0 +1,29 @@
+site_name: BankVault
+site_description: Just-in-time privilege elevation for a mock retail bank's loan origination pipeline
+repo_url: https://github.com/Bigbadlonewolf/bankvault
+repo_name: Bigbadlonewolf/bankvault
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+  features:
+    - navigation.sections
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Architecture Decisions:
+      - "ADR-001: Build vs. Buy": adr/001-build-vs-buy-jit-access.md
+      - "ADR-002: Workforce Identity Federation vs. IAP": adr/002-workforce-identity-federation-vs-iap.md
+  - Compliance Coverage: controls-mapping.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - fenced_code
+  - toc:
+      permalink: true

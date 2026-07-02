@@ -1,0 +1,30 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
+terraform/.build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+*.egg-info/
+
+# Secrets — NEVER commit
+.env
+*.key
+*.pem
+service-account*.json
+credentials*.json
+token*.json
+
+# MkDocs
+site/
+
+# OS cruft
+.DS_Store
+Thumbs.db
