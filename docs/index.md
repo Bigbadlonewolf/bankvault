@@ -13,6 +13,9 @@ BankVault replaces the standing grant with a request: a loan officer asks for ac
 - [Architecture](architecture.md) — the full request/grant/revoke flow, field by field
 - [ADR-001: Build vs. Buy](adr/001-build-vs-buy-jit-access.md) — why a custom broker instead of an off-the-shelf PAM platform
 - [ADR-002: Workforce Identity Federation vs. IAP](adr/002-workforce-identity-federation-vs-iap.md) — how loan officer identity should feed IAM decisions
+- [ADR-003: Scope and Actor Definition](adr/003-scope-and-actor-definition.md) — why this system is built around one GLBA-governed actor-resource pair
+- [ADR-004: MFA Freshness as the Zero Trust Signal](adr/004-mfa-freshness-zero-trust-signal.md) — the OIDC `max_age=0` freshness check at grant time
+- [ADR-005: PAM Grant/Revocation Lifecycle](adr/005-pam-grant-revocation-lifecycle.md) — how GCP Privileged Access Manager issues and expires the grant
 - [Compliance Coverage](controls-mapping.md) — PCI DSS 7, FFIEC, and SOX 404 mapped to specific resources in this repo
 
 ## What This Isn't
