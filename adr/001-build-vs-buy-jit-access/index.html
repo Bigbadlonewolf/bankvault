@@ -412,6 +412,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#supersession-note-2026-07-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supersession Note (2026-07-08)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -547,6 +558,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
   
 </li>
       
@@ -732,6 +754,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#supersession-note-2026-07-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supersession Note (2026-07-08)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -870,6 +903,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -891,18 +935,72 @@
 
 
 <h1 id="adr-001-build-vs-buy-custom-jit-broker-vs-off-the-shelf-pam">ADR-001: Build vs. Buy — Custom JIT Broker vs. Off-the-Shelf PAM<a class="headerlink" href="#adr-001-build-vs-buy-custom-jit-broker-vs-off-the-shelf-pam" title="Permanent link">&para;</a></h1>
-<p><strong>Date</strong>: 2026-07-01
-<strong>Status</strong>: Accepted
-<strong>Authors</strong>: Lanre Oluokun</p>
+<p><strong>Date:</strong> 2026-07-01
+<strong>Status:</strong> Superseded in part by ADR-005 (2026-07-08)
+<strong>Authors:</strong> Lanre Oluokun
+<strong>Implementation:</strong> Grant-issuance mechanism superseded; audit-ledger and enforcement-primitive decisions still in force</p>
+<hr />
+<h2 id="supersession-note-2026-07-08">Supersession Note (2026-07-08)<a class="headerlink" href="#supersession-note-2026-07-08" title="Permanent link">&para;</a></h2>
+<p><strong>What still stands.</strong> The build-vs-buy conclusion in this ADR holds: an off-the-shelf PAM platform (CyberArk, Delinea, BeyondTrust) remains the wrong mechanism for fine-grained, CEL-conditioned, resource-scoped GCP IAM grants, and BankVault's audit ledger should feed the bank's existing PAM/SIEM rather than attempt to replace it.</p>
+<p><strong>What does not stand.</strong> The <em>grant-issuance mechanism</em> chosen here is superseded. This ADR selected a custom Cloud Functions broker applying IAM Conditions directly, and listed GCP's native Privileged Access Manager under Alternatives Considered as Preview-stage, with the explicit note that "a real production decision should re-evaluate against GCP PAM once it's GA."</p>
+<p>That condition was met. GCP PAM reached GA, and <a href="../005-pam-grant-revocation-lifecycle/">ADR-005</a> re-evaluates against it and adopts it: PAM now issues the grant via a project-level entitlement (<code>maxRequestDuration = 1800s</code>), and the custom Cloud Function grant/revoke layer this ADR selected is rejected there on the grounds that it reimplements a lifecycle GCP now manages natively.</p>
+<p><strong>Trade-off accepted in reversing.</strong> Reversing a decision one week after making it costs credibility if the reversal is unprincipled. It is not unprincipled here: this ADR named the exact trigger condition ("once it's GA") and that condition fired. The alternative — holding to a custom lifecycle out of consistency with a decision made under different product availability — would have meant maintaining code whose only remaining justification was that it had already been written. That is a worse failure than a documented reversal.</p>
+<p><strong>The cost of the reversal, stated plainly.</strong> Adopting GA PAM trades control for maintenance burden. The custom broker would have given full control over revocation triggers, including revocation paths PAM does not expose. GCP PAM's behavior on a missed auto-expiry is undocumented — a gap ADR-005 mitigates with a detective-only reconciliation job, not a preventive control. Building custom would have avoided that specific unknown at the cost of owning the entire grant lifecycle. That trade was made deliberately, and the residual detection-vs-containment gap is documented in ADR-005's Residual Risk section rather than being absorbed silently.</p>
+<p><strong>Precise boundary of what is superseded:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Section of this ADR</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Decision — "build a custom Cloud Functions broker"</td>
+<td><strong>Superseded</strong> by ADR-005 (PAM entitlement issues the grant)</td>
+</tr>
+<tr>
+<td>Decision — "recommend the audit ledger feed the bank's existing PAM/SIEM"</td>
+<td><strong>In force</strong></td>
+</tr>
+<tr>
+<td>Rationale — IAM Conditions as the enforcement primitive</td>
+<td><strong>In force</strong> (static CEL binding in ADR-005 scopes access to the single credit-report object)</td>
+</tr>
+<tr>
+<td>Rationale — vendor PAM is a poor fit for resource-scoped cloud IAM grants</td>
+<td><strong>In force</strong></td>
+</tr>
+<tr>
+<td>Consequences — "no vendor support contract" / "custom code carries custom risk"</td>
+<td><strong>Narrowed.</strong> Now applies only to the broker's request-validation layer (<code>main.py</code>), not to the grant lifecycle</td>
+</tr>
+<tr>
+<td>Consequences — audit ledger in plain BigQuery</td>
+<td><strong>In force</strong></td>
+</tr>
+<tr>
+<td>Alternatives — GCP-native PAM "Preview, re-evaluate at GA"</td>
+<td><strong>Resolved.</strong> Re-evaluated at GA; adopted in ADR-005</td>
+</tr>
+</tbody>
+</table>
+<p>Read this ADR as the record of <em>why not enterprise PAM</em>. Read ADR-005 as the record of <em>how the grant lifecycle is actually issued</em>.</p>
+<hr />
 <h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
 <p>The loan origination pipeline needs just-in-time privilege elevation: a loan officer should never hold standing read access to the customer PII bucket, only a time-bound grant scoped to the application they're processing. Two paths exist to deliver this on GCP:</p>
-<ol>
+<ul>
 <li><strong>Build</strong> — a custom broker (the Cloud Functions in this repo) that applies and revokes native GCP IAM conditions directly.</li>
 <li><strong>Buy</strong> — an established Privileged Access Management (PAM) platform (CyberArk, Delinea/Thycotic, BeyondTrust) configured with a GCP connector to broker the same grants.</li>
-</ol>
-<p>Banks default to buying PAM for a reason: it's the category regulators expect to see, and most already have an enterprise PAM deployment covering on-prem AD and jump-host access. The question is whether that same platform is the right mechanism for <em>cloud-native, resource-level</em> IAM grants, or whether it's solving a different problem.</p>
+</ul>
+<p>Banks default to buying PAM for a reason: it's the category regulators expect to see, and most already have an enterprise PAM deployment covering on-prem AD and jump-host access. The question is whether that same platform is the right mechanism for cloud-native, resource-level IAM grants, or whether it's solving a different problem.</p>
+<hr />
 <h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
-<p><strong>Build a custom Cloud Functions broker for GCP resource-level JIT grants</strong>, using native IAM Conditions as the enforcement primitive. Recommend that BankVault's audit ledger be fed into whatever enterprise PAM/SIEM the bank already runs, rather than positioning this as a PAM replacement.</p>
+<p>Build a custom Cloud Functions broker for GCP resource-level JIT grants, using native IAM Conditions as the enforcement primitive. Recommend that BankVault's audit ledger be fed into whatever enterprise PAM/SIEM the bank already runs, rather than positioning this as a PAM replacement.</p>
+<blockquote>
+<p><strong>Superseded in part.</strong> The grant-issuance half of this decision was replaced by ADR-005 when GCP PAM reached GA. IAM Conditions remain the enforcement primitive; the audit-ledger recommendation is unchanged. See the Supersession Note above.</p>
+</blockquote>
+<hr />
 <h2 id="rationale">Rationale<a class="headerlink" href="#rationale" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -951,29 +1049,49 @@
 </tbody>
 </table>
 <h3 id="why-buy-still-matters-here">Why buy still matters here<a class="headerlink" href="#why-buy-still-matters-here" title="Permanent link">&para;</a></h3>
-<p>This isn't an argument that PAM platforms are wrong for banks — they're the correct tool for what they're built for: broker of shared/service credentials, session recording for privileged interactive access (RDP/SSH to servers), and a single control plane across heterogeneous on-prem and multi-cloud estates. A bank that already owns CyberArk for its Windows admin accounts and on-prem database credentials should not stand up a second, disconnected access-governance system for GCP. The realistic Week 1+ path is: keep the custom broker for what native cloud IAM does better (fine-grained, resource-scoped, CEL-conditioned grants), and route this repo's BigQuery audit ledger into the existing PAM/SIEM as a downstream sink, so examiners see one consolidated access story rather than two.</p>
+<p>This isn't an argument that PAM platforms are wrong for banks — they're the correct tool for what they're built for: broker of shared/service credentials, session recording for privileged interactive access (RDP/SSH to servers), and a single control plane across heterogeneous on-prem and multi-cloud estates.</p>
+<p>A bank that already owns CyberArk for its Windows admin accounts and on-prem database credentials should not stand up a second, disconnected access-governance system for GCP. The realistic Week 1+ path is: keep the broker for what native cloud IAM does better (fine-grained, resource-scoped, CEL-conditioned grants), and route this repo's BigQuery audit ledger into the existing PAM/SIEM as a downstream sink, so examiners see one consolidated access story rather than two.</p>
+<blockquote>
+<p>This recommendation survives supersession unchanged. Under ADR-005, the grant is issued by GCP PAM rather than a custom function — but it is still a <em>second</em> access-governance surface from the bank's point of view, and the ledger-unification recommendation applies with equal force.</p>
+</blockquote>
+<hr />
 <h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
 <h3 id="positive">Positive<a class="headerlink" href="#positive" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Zero licensing cost; infrastructure cost stays inside GCP's serverless free tiers at the volumes a single loan-origination team would generate.</li>
 <li>Every grant is a native GCP IAM binding — nothing to reconcile against a second system's idea of "who has access."</li>
-<li>The audit ledger is plain BigQuery, so it's queryable by any tool the bank already uses for GRC reporting, no proprietary export format.</li>
-<li>Fast to extend: adding a second protected resource is a Terraform module + one more <code>resource</code> field in the request payload, not a PAM policy change ticket.</li>
+<li>The audit ledger is plain BigQuery, so it's queryable by any tool the bank already uses for GRC reporting, with no proprietary export format.</li>
+<li>Fast to extend: adding a second protected resource is a Terraform module plus one more resource field in the request payload, not a PAM policy change ticket.</li>
 </ul>
 <h3 id="negative">Negative<a class="headerlink" href="#negative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>No vendor support contract — bugs in the broker are the team's problem, not a vendor's SLA.</li>
-<li>No built-in session recording, keystroke logging, or interactive session brokering — this system grants API/data access, not shell/RDP sessions, and would not replace PAM for infrastructure admin access.</li>
-<li>Duplicate governance surface risk: if the bank already runs enterprise PAM, a second, disconnected access system is itself an audit finding unless the ledgers are unified (see recommendation above).</li>
-<li>Custom code carries custom risk: every validation rule (segregation of duties, duration caps) is something this team wrote and must maintain correctly, versus inheriting a vendor's already-audited policy engine.</li>
+<li><strong>No vendor support contract</strong> — bugs in the broker are the team's problem, not a vendor's SLA. <em>(Narrowed by ADR-005: the grant lifecycle is now GCP-managed. This consequence now applies only to the broker's request-validation layer.)</em></li>
+<li><strong>No built-in session recording, keystroke logging, or interactive session brokering</strong> — this system grants API/data access, not shell/RDP sessions, and would not replace PAM for infrastructure admin access. <em>(Unchanged by supersession.)</em></li>
+<li><strong>Duplicate governance surface risk</strong> — if the bank already runs enterprise PAM, a second, disconnected access system is itself an audit finding unless the ledgers are unified. <em>(Unchanged by supersession.)</em></li>
+<li><strong>Custom code carries custom risk</strong> — every validation rule (segregation of duties, duration caps) is something this team wrote and must maintain correctly, versus inheriting a vendor's already-audited policy engine. <em>(Narrowed by ADR-005: duration caps are now enforced by PAM's <code>maxRequestDuration</code>, not by custom code. Identity and freshness validation in <code>main.py</code> remain custom, and remain this team's risk — see ADR-004.)</em></li>
 </ul>
+<hr />
 <h2 id="alternatives-considered">Alternatives Considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
 <h3 id="cyberark-delinea-pam-with-gcp-connector">CyberArk / Delinea PAM with GCP connector<a class="headerlink" href="#cyberark-delinea-pam-with-gcp-connector" title="Permanent link">&para;</a></h3>
-<p>Rejected for this scope. Realistic for infrastructure-level access (VM SSH, Cloud SQL admin credentials) but a poor fit for fine-grained, per-object GCS grants scoped to a single loan application — the CEL condition model this repo relies on isn't something these platforms broker natively.</p>
+<p><strong>Rejected for this scope.</strong> Realistic for infrastructure-level access (VM SSH, Cloud SQL admin credentials) but a poor fit for fine-grained, per-object GCS grants scoped to a single loan application — the CEL condition model this repo relies on isn't something these platforms broker natively.</p>
+<p><em>Trade-off acknowledged:</em> this rejection forgoes a vendor-audited policy engine, vendor support, and the regulatory familiarity examiners have with the category. Those are real losses. They are accepted because the mechanism mismatch is fundamental, not a configuration problem — a credential-vaulting abstraction cannot express "read this one object for the next 30 minutes."</p>
 <h3 id="gcp-native-privileged-access-manager-pam">GCP-native Privileged Access Manager (PAM)<a class="headerlink" href="#gcp-native-privileged-access-manager-pam" title="Permanent link">&para;</a></h3>
-<p>Google's own IAM-integrated PAM product (Preview at time of writing) solves a similar problem — time-bound entitlement grants with an approval workflow — and would likely obsolete parts of this repo's grant_access function if adopted. Not used here because Week 1 scope is explicitly about demonstrating the underlying IAM Conditions mechanism directly; a real production decision should re-evaluate against GCP PAM once it's GA.</p>
+<p><strong>Originally deferred; subsequently adopted.</strong> Google's own IAM-integrated PAM product (Preview at time of writing) solves a similar problem — time-bound entitlement grants with an approval workflow — and would likely obsolete parts of this repo's <code>grant_access</code> function if adopted. Not used at the time of this ADR because Week 1 scope was explicitly about demonstrating the underlying IAM Conditions mechanism directly; the ADR recorded that a real production decision should re-evaluate against GCP PAM once it reached GA.</p>
+<blockquote>
+<p><strong>Resolved 2026-07-08.</strong> PAM reached GA. ADR-005 re-evaluated and adopted it. The custom grant/revoke layer is no longer the mechanism. See the Supersession Note.</p>
+</blockquote>
 <h3 id="do-nothing-standing-iam-roles-with-periodic-access-reviews">Do nothing — standing IAM roles with periodic access reviews<a class="headerlink" href="#do-nothing-standing-iam-roles-with-periodic-access-reviews" title="Permanent link">&para;</a></h3>
-<p>The status quo at many banks. Rejected because it fails PCI DSS 7.2's need-to-know requirement between review cycles — a quarterly access review means a departed or reassigned loan officer can retain read access to PII for up to three months, which is the exact anti-pattern this system exists to close.</p>
+<p><strong>Rejected.</strong> The status quo at many banks. It fails the Safeguards Rule's access-limitation requirement between review cycles: <a href="https://www.ecfr.gov/current/title-16/chapter-I/subchapter-C/part-314">16 CFR 314.4(c)(1)(ii)</a> requires limiting authorized users' access to only the customer information they need to perform their duties, which a quarterly review cycle cannot satisfy. A departed or reassigned loan officer can retain read access to NPI for up to three months — the exact anti-pattern this system exists to close.</p>
+<blockquote>
+<p><em>Citation note (2026-07-08):</em> this rejection originally cited PCI DSS 7.2. That was the wrong regime. <a href="../003-scope-and-actor-definition/">ADR-003</a> fixes the institution type as a <strong>non-bank mortgage lender under FTC jurisdiction</strong>, making the GLBA Safeguards Rule the applicable instrument. PCI DSS applicability to this flow was never verified and is not claimed. The underlying argument is unchanged; only the citation is corrected.</p>
+</blockquote>
+<hr />
+<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../003-scope-and-actor-definition/">ADR-003: Scope and Actor Definition</a> — fixes the actor/resource pair and the GLBA basis</li>
+<li><a href="../004-mfa-freshness-zero-trust-signal/">ADR-004: MFA Freshness as the Zero Trust Signal</a> — gates the grant request</li>
+<li><a href="../005-pam-grant-revocation-lifecycle/">ADR-005: PAM Grant/Revocation Lifecycle</a> — <strong>supersedes the grant-issuance decision in this ADR</strong></li>
+</ul>
 
 
 
