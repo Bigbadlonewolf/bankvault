@@ -1,28 +1,20 @@
-# Copy this file to terraform.tfvars and fill in your values.
-# NEVER commit terraform.tfvars to version control (it may contain
-# environment-specific values you don't want in git history).
+# Copy to terraform.tfvars and fill in. At minimum set project_id.
+# terraform.tfvars is gitignored; never commit real project values.
 
 project_id = "your-gcp-project-id"
-region     = "us-central1"
 
-# Optional overrides (defaults are fine for most deployments)
-# bq_location                  = "US"
-# pii_bucket_name              = ""                       # defaults to "<project_id>-loan-origination-pii"
-# audit_dataset_id             = "bankvault_audit"
-# audit_table_id               = "access_grants"
-# platform_logs_dataset_id     = "bankvault_platform_logs"
-# grant_function_name          = "bankvault-grant-access"
-# revoke_function_name         = "bankvault-revoke-access"
-# revocation_topic_name        = "bankvault-revocation-trigger"
-# revocation_schedule          = "*/5 * * * *"
-# revocation_schedule_timezone = "Etc/UTC"
-# max_grant_duration_minutes   = 240
-# allowed_requester_domain     = "bank.example.com"        # empty string disables the check
-# grant_function_ingress       = "ALLOW_INTERNAL_ONLY"
+# region = "us-central1"
 
-# Demo-only: provisions one Terraform-managed conditional binding so
-# `terraform plan` has a concrete CEL example to show. Leave false otherwise —
-# production grants are created dynamically by grant_access, not by Terraform.
-# enable_example_jit_grant = false
-# demo_loan_officer_email  = "loan.officer@example.com"
-# demo_grant_expiry        = "2026-12-31T23:59:59Z"
+# Both must share this domain; requester and approver are checked against it.
+# allowed_domain = "lender.example.com"
+
+# Segregation of duties (ADR-003): these two groups must be different.
+# underwriter_group = "group:underwriters@lender.example.com"
+# approver_group    = "group:underwriting-leads@lender.example.com"
+
+# One object-scoped PAM entitlement is created per id here (ADR-003).
+# demo_application_ids = ["APP-1001", "APP-1002"]
+
+# max_grant_minutes    = 30   # PAM caps and expires the grant at this bound
+# max_auth_age_seconds = 300  # login must be fresher than this (ADR-004)
+# reconcile_schedule   = "*/15 * * * *"

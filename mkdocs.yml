@@ -1,32 +1,41 @@
 site_name: BankVault
-site_description: Just-in-time privilege elevation for a mock retail bank's loan origination pipeline
+site_description: Just-in-time privilege elevation for a mock mortgage lender, built on GCP Privileged Access Manager.
 repo_url: https://github.com/Bigbadlonewolf/bankvault
 repo_name: Bigbadlonewolf/bankvault
 
 theme:
   name: material
   palette:
+    - scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
     - scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
   features:
     - navigation.sections
+    - navigation.top
     - content.code.copy
 
 nav:
-  - Home: index.md
+  - Overview: index.md
   - Architecture: architecture.md
-  - Architecture Decisions:
-      - "ADR-001: Build vs. Buy": adr/001-build-vs-buy-jit-access.md
-      - "ADR-002: Workforce Identity Federation vs. IAP": adr/002-workforce-identity-federation-vs-iap.md
-      - "ADR-003: Scope and Actor Definition": adr/003-scope-and-actor-definition.md
-      - "ADR-004: MFA Freshness as the Zero Trust Signal": adr/004-mfa-freshness-zero-trust-signal.md
-      - "ADR-005: PAM Grant/Revocation Lifecycle": adr/005-pam-grant-revocation-lifecycle.md
-  - Compliance Coverage: controls-mapping.md
+  - Compliance coverage: controls-mapping.md
+  - Decision records:
+      - "ADR-001: Build vs. Buy, reversed": adr/001-build-vs-buy-jit-broker.md
+      - "ADR-002: Two directories is one too many": adr/002-workforce-identity-federation-vs-iap.md
+      - "ADR-003: Scope and actor definition": adr/003-scope-and-actor-definition.md
+      - "ADR-004: MFA freshness as the signal": adr/004-mfa-freshness-zero-trust-signal.md
+      - "ADR-005: Grant lifecycle, detect not contain": adr/005-pam-grant-lifecycle.md
 
 markdown_extensions:
   - admonition
-  - tables
-  - fenced_code
+  - pymdownx.superfences
   - toc:
       permalink: true

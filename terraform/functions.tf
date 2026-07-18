@@ -1,149 +1,116 @@
-# ── Source bucket ──────────────────────────────────────────────────────────
-resource "google_storage_bucket" "function_source" {
-  name                        = "${var.project_id}-bankvault-source"
-  location                    = var.region
-  force_destroy               = true
-  uniform_bucket_level_access = true
-
-  labels = local.common_labels
-
-  versioning {
-    enabled = true
-  }
-
-  depends_on = [google_project_service.apis]
+locals {
+  entitlement_prefix = "bankvault-credit-report-"
 }
 
-data "archive_file" "grant_access_source" {
+# Zip each function's source. archive_file rezips when the source changes; the
+# object name carries the hash, so a code change forces a new deploy.
+data "archive_file" "request_broker" {
   type        = "zip"
-  source_dir  = "${path.module}/../functions/grant_access"
-  output_path = "${path.module}/.build/grant-access-source.zip"
-  excludes    = ["__pycache__", "*.pyc", ".pytest_cache"]
+  source_dir  = "${path.module}/../functions/request_broker"
+  output_path = "${path.module}/.build/request_broker.zip"
 }
 
-data "archive_file" "revoke_access_source" {
+data "archive_file" "reconcile" {
   type        = "zip"
-  source_dir  = "${path.module}/../functions/revoke_access"
-  output_path = "${path.module}/.build/revoke-access-source.zip"
-  excludes    = ["__pycache__", "*.pyc", ".pytest_cache"]
+  source_dir  = "${path.module}/../functions/reconcile"
+  output_path = "${path.module}/.build/reconcile.zip"
 }
 
-resource "google_storage_bucket_object" "grant_access_source" {
-  name   = "grant-access-source-${data.archive_file.grant_access_source.output_md5}.zip"
+resource "google_storage_bucket_object" "request_broker_src" {
+  name   = "sources/request_broker-${data.archive_file.request_broker.output_md5}.zip"
   bucket = google_storage_bucket.function_source.name
-  source = data.archive_file.grant_access_source.output_path
+  source = data.archive_file.request_broker.output_path
 }
 
-resource "google_storage_bucket_object" "revoke_access_source" {
-  name   = "revoke-access-source-${data.archive_file.revoke_access_source.output_md5}.zip"
+resource "google_storage_bucket_object" "reconcile_src" {
+  name   = "sources/reconcile-${data.archive_file.reconcile.output_md5}.zip"
   bucket = google_storage_bucket.function_source.name
-  source = data.archive_file.revoke_access_source.output_path
+  source = data.archive_file.reconcile.output_path
 }
 
-# ── grant_access: HTTP-triggered approval workflow engine ────────────────────
-resource "google_cloudfunctions2_function" "grant_access" {
-  provider    = google-beta
-  name        = var.grant_function_name
-  location    = var.region
-  description = "BankVault: validates a JIT access request and applies a time-bound IAM binding on the loan-origination PII bucket."
-
-  labels = local.common_labels
+resource "google_cloudfunctions2_function" "request_broker" {
+  name     = "bankvault-request-broker"
+  location = var.region
+  project  = var.project_id
 
   build_config {
     runtime     = "python312"
-    entry_point = "grant_access"
-
+    entry_point = "handle_request"
     source {
       storage_source {
         bucket = google_storage_bucket.function_source.name
-        object = google_storage_bucket_object.grant_access_source.name
+        object = google_storage_bucket_object.request_broker_src.name
       }
     }
   }
 
   service_config {
-    min_instance_count             = 0
-    max_instance_count             = 10
-    available_memory               = "256M"
-    timeout_seconds                = 30
-    service_account_email          = google_service_account.grant_sa.email
-    ingress_settings               = var.grant_function_ingress
-    all_traffic_on_latest_revision = true
+    max_instance_count    = 3
+    available_memory      = "256M"
+    timeout_seconds       = 60
+    service_account_email = google_service_account.broker.email
+
+    # Internal only. This is a back-office control plane, not a public endpoint.
+    ingress_settings = "ALLOW_INTERNAL_ONLY"
 
     environment_variables = {
-      PII_BUCKET_NAME            = google_storage_bucket.loan_origination_pii.name
-      AUDIT_DATASET              = google_bigquery_dataset.audit.dataset_id
-      AUDIT_TABLE                = google_bigquery_table.access_grants.table_id
-      SESSION_SECRET_PREFIX      = local.session_secret_prefix
-      MAX_GRANT_DURATION_MINUTES = tostring(var.max_grant_duration_minutes)
-      ALLOWED_REQUESTER_DOMAIN   = var.allowed_requester_domain
-      # GOOGLE_CLOUD_PROJECT is injected automatically by the runtime
+      PROJECT_ID           = var.project_id
+      LOCATION             = "global"
+      AUDIT_DATASET        = google_bigquery_dataset.audit.dataset_id
+      LEDGER_TABLE         = google_bigquery_table.access_grants.table_id
+      CREDIT_BUCKET        = local.credit_reports_bucket
+      ALLOWED_DOMAIN       = var.allowed_domain
+      MAX_AUTH_AGE_SECONDS = tostring(var.max_auth_age_seconds)
+      MAX_GRANT_MINUTES    = tostring(var.max_grant_minutes)
+      ENTITLEMENT_PREFIX   = local.entitlement_prefix
     }
   }
 
-  depends_on = [
-    google_project_service.apis,
-    google_storage_bucket_iam_member.grant_sa_bucket_iam_admin,
-    google_project_iam_member.grant_sa_secret_admin_scoped,
-    google_bigquery_dataset_iam_member.grant_sa_audit_editor,
-    google_project_iam_member.grant_sa_log_writer,
-  ]
+  labels = local.common_labels
+
+  depends_on = [google_project_service.enabled]
 }
 
-# ── revoke_access: Pub/Sub-triggered revocation sweep ─────────────────────────
-resource "google_cloudfunctions2_function" "revoke_access" {
-  provider    = google-beta
-  name        = var.revoke_function_name
-  location    = var.region
-  description = "BankVault: sweeps the audit ledger for expired, unrevoked grants and removes their IAM bindings and session secrets."
-
-  labels = local.common_labels
+resource "google_cloudfunctions2_function" "reconcile" {
+  name     = "bankvault-reconcile"
+  location = var.region
+  project  = var.project_id
 
   build_config {
     runtime     = "python312"
-    entry_point = "revoke_access"
-
+    entry_point = "handle_event"
     source {
       storage_source {
         bucket = google_storage_bucket.function_source.name
-        object = google_storage_bucket_object.revoke_access_source.name
+        object = google_storage_bucket_object.reconcile_src.name
       }
     }
   }
 
   service_config {
-    min_instance_count             = 0
-    max_instance_count             = 5
-    available_memory               = "256M"
-    timeout_seconds                = 60
-    service_account_email          = google_service_account.revoke_sa.email
-    ingress_settings               = "ALLOW_INTERNAL_ONLY"
-    all_traffic_on_latest_revision = true
+    max_instance_count    = 1
+    available_memory      = "256M"
+    timeout_seconds       = 120
+    service_account_email = google_service_account.reconcile.email
 
     environment_variables = {
-      PII_BUCKET_NAME       = google_storage_bucket.loan_origination_pii.name
-      AUDIT_DATASET         = google_bigquery_dataset.audit.dataset_id
-      AUDIT_TABLE           = google_bigquery_table.access_grants.table_id
-      SESSION_SECRET_PREFIX = local.session_secret_prefix
+      PROJECT_ID    = var.project_id
+      LOCATION      = "global"
+      AUDIT_DATASET = google_bigquery_dataset.audit.dataset_id
+      LEDGER_TABLE  = google_bigquery_table.access_grants.table_id
+      CREDIT_BUCKET = local.credit_reports_bucket
     }
   }
 
   event_trigger {
     trigger_region        = var.region
     event_type            = "google.cloud.pubsub.topic.v1.messagePublished"
-    pubsub_topic          = google_pubsub_topic.revocation_trigger.id
+    pubsub_topic          = google_pubsub_topic.reconcile_trigger.id
+    service_account_email = google_service_account.reconcile.email
     retry_policy          = "RETRY_POLICY_RETRY"
-    service_account_email = google_service_account.revoke_sa.email
   }
 
-  depends_on = [
-    google_project_service.apis,
-    google_storage_bucket_iam_member.revoke_sa_bucket_iam_admin,
-    google_project_iam_member.revoke_sa_secret_admin_scoped,
-    google_bigquery_dataset_iam_member.revoke_sa_audit_editor,
-    google_project_iam_member.revoke_sa_bq_job_user,
-    google_project_iam_member.revoke_sa_log_writer,
-    google_project_iam_member.eventarc_service_agent,
-    google_project_iam_member.run_invoker_pubsub,
-  ]
+  labels = local.common_labels
+
+  depends_on = [google_project_service.enabled]
 }
