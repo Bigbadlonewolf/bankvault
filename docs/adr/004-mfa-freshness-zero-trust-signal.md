@@ -13,7 +13,7 @@ A valid session says "this person authenticated at some point in the allowed win
 
 ## Decision
 
-The broker gates each grant on **MFA freshness**, not session validity. It reads the OIDC token's `auth_time` claim and refuses to create a PAM grant if `now - auth_time` exceeds `max_auth_age_seconds` (default 300, five minutes). A stale login is denied with a reason, and the underwriter must re-authenticate before the request will pass.
+The broker gates each grant on **MFA freshness**, not session validity. It reads the OIDC token's `auth_time` claim and refuses to create a PAM grant if `now - auth_time` exceeds `max_auth_age_seconds` (default 900, fifteen minutes). A stale login is denied with a reason, and the underwriter must re-authenticate before the request will pass.
 
 This check runs in `request_broker` (`verify_mfa_freshness`), before any PAM call. It is a broker-side check against the identity provider's token.
 
@@ -43,7 +43,7 @@ I took that trade deliberately. An identity control that keeps granting access w
 
 **Negative**
 - Availability is coupled to the IdP (consistent with ADR-002, but real).
-- Five minutes is a chosen number. Too short and underwriters re-authenticate constantly; too long and "fresh" stops meaning present. It is a tunable (`max_auth_age_seconds`), not a proven value.
+- Fifteen minutes is a chosen number. Too short and underwriters re-authenticate constantly; too long and "fresh" stops meaning present. It is a tunable (`max_auth_age_seconds`), not a proven value.
 - This repo validates the token's claims shape and `auth_time`; it does not perform full signature verification against the live IdP JWKS. That is a stub boundary, called out in the README, not a finished auth path.
 
 ## Alternatives considered

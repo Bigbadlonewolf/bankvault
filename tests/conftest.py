@@ -41,7 +41,7 @@ def cfg():
         "ledger_table": "access_grants",
         "credit_bucket": "test-credit-reports",
         "allowed_domain": "lender.example.com",
-        "max_auth_age_seconds": 300,
+        "max_auth_age_seconds": 900,
         "max_grant_minutes": 30,
         "entitlement_prefix": "bankvault-credit-report-",
     }

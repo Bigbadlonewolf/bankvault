@@ -34,7 +34,7 @@ def _config() -> dict:
         "ledger_table": os.environ.get("LEDGER_TABLE", "access_grants"),
         "credit_bucket": os.environ.get("CREDIT_BUCKET", "local-credit-reports"),
         "allowed_domain": os.environ.get("ALLOWED_DOMAIN", "lender.example.com"),
-        "max_auth_age_seconds": int(os.environ.get("MAX_AUTH_AGE_SECONDS", "300")),
+        "max_auth_age_seconds": int(os.environ.get("MAX_AUTH_AGE_SECONDS", "900")),
         "max_grant_minutes": int(os.environ.get("MAX_GRANT_MINUTES", "30")),
         "entitlement_prefix": os.environ.get("ENTITLEMENT_PREFIX", "bankvault-credit-report-"),
     }

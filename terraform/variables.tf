@@ -53,7 +53,7 @@ variable "max_grant_minutes" {
 variable "max_auth_age_seconds" {
   type        = number
   description = "How fresh the underwriter's login must be, in seconds, for the broker to create a grant (ADR-004). Passed to request_broker."
-  default     = 300
+  default     = 900
 }
 
 variable "reconcile_schedule" {
