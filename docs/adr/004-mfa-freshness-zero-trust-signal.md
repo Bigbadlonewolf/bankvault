@@ -1,130 +1,53 @@
-# ADR-004: MFA Freshness as the Zero Trust Signal
+# ADR-004: MFA freshness as the signal, not session validity
 
-**Date:** 2026-07-03
-**Status:** Accepted
-**Authors:** Lanre Oluokun
-**Implementation:** `main.py` — freshness check implemented; identity-validation stub not yet replaced (see ADR-005 Known Gaps)
-
----
+- **Status:** Accepted
+- **Date:** 2026-07-11
+- **Deciders:** Lanre
+- **Related:** ADR-002, ADR-005
 
 ## Context
 
-BankVault must enforce Zero Trust at the point of JIT grant. Identity alone (assigned underwriter + valid loan application) is insufficient. The broker must verify trust of the *specific session*, not just authorization of the user.
+An underwriter requests a credit report. Their corporate session is valid: they logged in this morning, the token has not expired. Is a valid session enough to gate a privileged read of consumer financial data?
 
-The distinction matters because every other control in this system assumes the session presenting the request is the session the underwriter actually holds. Without a freshness signal, a stolen or replayed session token satisfies every downstream check — the entitlement is valid, the CEL condition matches, the audit log records a legitimate-looking grant. Authorization succeeds and the control set produces no signal that anything is wrong.
-
----
+A valid session says "this person authenticated at some point in the allowed window." It does not say "this person is at the keyboard right now." Between the morning login and this afternoon's request sits a laptop left unlocked, a hijacked session, a token lifted from a compromised host. For a normal read, session validity is a reasonable bar. For a privileged read of a credit report, the more useful signal is *recency*: did this person prove who they are within the last few minutes.
 
 ## Decision
 
-**MFA freshness check via a `max_age=0` OIDC constraint.**
+The broker gates each grant on **MFA freshness**, not session validity. It reads the OIDC token's `auth_time` claim and refuses to create a PAM grant if `now - auth_time` exceeds `max_auth_age_seconds` (default 300, five minutes). A stale login is denied with a reason, and the underwriter must re-authenticate before the request will pass.
 
-The underwriter-facing tool must explicitly request `max_age=0` at the point of the JIT request. Forwarding an existing session token instead of forcing re-authentication would make this check a no-op.
+This check runs in `request_broker` (`verify_mfa_freshness`), before any PAM call. It is a broker-side check against the identity provider's token.
 
-The broker validates the returned ID token's `auth_time` claim against a **15-minute window**. Hard deny if stale or missing. The check runs on every JIT request. **No session caching.**
+## Rationale, including where the check runs and why
 
-### IdP unavailability: fail closed
+The important and easily-fabricated detail: **GCP IAM has no "how recently did this principal complete MFA" condition attribute.** IAM Conditions support request-time, resource, and similar attributes; they do not expose authentication recency. So freshness cannot be a CEL clause on the entitlement the way the object-scope and time-window clauses are. It has to be enforced at a layer that can see the authentication event.
 
-If the identity provider is unreachable, returns an error, or times out, **the broker denies the JIT request**. There is no fallback path, no cached-`auth_time` acceptance, and no degraded mode.
+There are two such layers, and this repo uses the first:
 
-A grant issued without a verifiable fresh authentication event is a grant issued without the Zero Trust signal this ADR exists to establish. The correct behavior on loss of that signal is denial, not assumption.
+1. **Broker check (implemented here).** The broker receives the IdP-issued OIDC token, reads `auth_time`, and enforces the freshness bound itself before requesting the grant. This is explicit, testable with a mocked token, and lives in the code path that already exists to enforce segregation of duties.
+2. **Access Context Manager reauthentication session controls (defense-in-depth, not implemented here).** ACM can require reauthentication after a configured interval for access to protected resources. That is the platform-level backstop behind the broker check. It is named here as the intended second layer, not wired up in this build.
 
-### Circuit breaker
+Enforcing freshness at the broker, in front of PAM, means a stale login never becomes a grant in the first place. The ledger records the `auth_time` that gated each grant, so the freshness decision is auditable after the fact, not just enforced in the moment.
 
-Rather than retrying a failing IdP on every request, the broker **opens a circuit after 3 consecutive IdP failures** and denies immediately for a **60-second cooldown** without issuing further calls, then allows a single probe request through. This bounds retry amplification against an IdP that is already degraded.
+## The cost, taken knowingly
 
-Denials during an open circuit are logged distinctly as `IDP_UNAVAILABLE`, separate from `MFA_STALE`, so that an availability incident is not misread in the audit trail as a stream of failed authentication attempts. Conflating the two would make an outage indistinguishable from an attack in post-incident review — which is precisely the moment the distinction matters most.
+Access is denied when the identity provider is unreachable, because the broker cannot confirm freshness without it. That means BankVault's availability is bounded by the IdP's. A loan decision with an SLA does not stop having one because Okta is down.
 
----
-
-## Trade-offs Accepted
-
-Each of the following is a known cost of the decision above, not an unresolved question. They are stated so that a reader does not have to discover them.
-
-### 1. BankVault's availability is bounded by the IdP's
-
-**The cost.** Fail-closed means an IdP outage blocks *all* JIT grants. Underwriters cannot obtain access to credit reports while the bank's IdP is down. A loan decision with an SLA does not stop having an SLA because Okta is having a bad afternoon.
-
-**Why it is accepted anyway.** The alternative is granting access to GLBA-regulated NPI on the basis of an unverified session. That inverts the control: a system designed to deny access without fresh trust would, under precisely the conditions most favorable to an attacker (identity infrastructure degraded, monitoring noisy, operators distracted), begin granting it. Fail-open on an identity control is not a graceful degradation; it is a control that switches itself off under stress.
-
-**What this obligates.** The bank's incident response plan must include a documented, audited, manually-approved break-glass path *outside this broker* for the case where a loan decision cannot wait out the outage. **That path is out of scope for this ADR and is not built.** Naming it here is not the same as having it. A production deployment cannot ship this decision without also shipping that path.
-
-### 2. The 15-minute `auth_time` window is a policy choice, not an empirical one
-
-**The cost.** Fifteen minutes is defensible but arbitrary. A shorter window forces re-authentication friction on underwriters mid-workflow; a longer one widens the replay window a stolen token can exploit. No measurement in this project justifies 15 over 10 or 20.
-
-**Why it is accepted anyway.** The alternative to an unvalidated number is either no window at all (which defeats the control) or a fabricated justification for a specific figure (which is worse than admitting the figure is a policy choice). It is documented as risk-based policy, and a real deployment would set it from the underwriter's actual task duration and the IdP's observed session behavior.
-
-### 3. `max_age=0` enforcement depends on correct client-tool implementation
-
-**The cost.** The broker validates `auth_time`, but it cannot force the client to have *requested* re-authentication. A client tool that forwards an existing session token and receives an `auth_time` that happens to fall within the window will pass this check without a fresh MFA event ever occurring. The control has a dependency on code the broker does not own.
-
-**Why it is accepted anyway.** There is no server-side signal that distinguishes "the IdP re-authenticated this user 3 minutes ago because we asked" from "the IdP re-authenticated this user 3 minutes ago for an unrelated reason." OIDC does not expose one. The mitigation is not architectural — it is a client-integration requirement that must be verified during onboarding of the underwriter-facing tool, and re-verified whenever that tool changes. This is a stated assumption below, not a solved problem.
-
-### 4. Circuit-breaker thresholds are untuned
-
-**The cost.** Three failures and a 60-second cooldown are placeholder values. Too sensitive and a transient network blip locks out underwriters for a minute; too tolerant and the broker hammers a degraded IdP.
-
-**Why it is accepted anyway.** The threshold values are far less important than the *presence* of the breaker — the failure mode being prevented (unbounded retry against a degraded IdP) is prevented at any reasonable threshold. Tuning requires the IdP's own SLO and observed error-rate distribution, which are bank-specific and not available at portfolio scope.
-
-### 5. Freshness gates the grant request, not the access window
-
-**The cost.** This ADR establishes trust at the moment of grant issuance. It does not re-check freshness during the 30-minute window that ADR-005 opens. A session compromised *after* a valid grant is active inherits that access for the remainder of the window.
-
-**Why it is accepted anyway.** Closing this would require session-bound revocation, which depends on OIDC back-channel logout support from the bank's IdP — unverified as available. ADR-005 records that as **Deferred**, not rejected, with an explicit revisit condition. The boundary between "freshness at request" and "freshness during window" is stated in both ADRs rather than left for a reader to infer.
-
----
+I took that trade deliberately. An identity control that keeps granting access when it cannot verify who is asking has a bypass, and the bypass opens under exactly the conditions an attacker wants: the IdP degraded, checks failing open, nobody watching. Fail-closed is the correct default for a privileged read of regulated data, and the availability cost is the price of not having a fail-open bypass. If a specific SLA cannot tolerate that, the answer is a documented, alerted break-glass path, not a control that quietly fails open.
 
 ## Consequences
 
-### Positive
+**Positive**
+- The signal that gates access is presence, not a possibly-stale session.
+- The gating `auth_time` is recorded per grant, so freshness is auditable, not just enforced.
+- Fail-closed by default; no silent fail-open bypass under IdP degradation.
 
-- Defensible Zero Trust signal, **request-scoped rather than session-scoped**.
-- **Fails safe** — deny by default, including when the identity plane itself is unavailable.
-- Audit log distinguishes `MFA_STALE` (a stale or missing `auth_time`) from `IDP_UNAVAILABLE` (an outage), so authentication failures and availability failures are not conflated in incident review.
-- Circuit breaker bounds retry amplification against a degraded IdP, so BankVault does not contribute to the outage it is reacting to.
+**Negative**
+- Availability is coupled to the IdP (consistent with ADR-002, but real).
+- Five minutes is a chosen number. Too short and underwriters re-authenticate constantly; too long and "fresh" stops meaning present. It is a tunable (`max_auth_age_seconds`), not a proven value.
+- This repo validates the token's claims shape and `auth_time`; it does not perform full signature verification against the live IdP JWKS. That is a stub boundary, called out in the README, not a finished auth path.
 
-### Negative
+## Alternatives considered
 
-- **Availability coupling.** Fail-closed on IdP unavailability means BankVault's availability is bounded by the IdP's. An IdP outage blocks all JIT grants, and the manually-approved break-glass path this implies is **not built**.
-- **The 15-minute window is unvalidated policy.** Documented as a risk-based choice, not presented as an empirically optimized figure.
-- **Client-side dependency.** `max_age=0` enforcement depends on the underwriter-facing tool implementing it correctly. The broker cannot detect a client that forwards a stale session whose `auth_time` happens to fall inside the window.
-- **Circuit-breaker thresholds untuned** against real IdP behavior.
-- **No in-window re-check.** Freshness gates issuance only; ADR-005's 30-minute window runs without further freshness validation.
-
----
-
-## Alternatives Considered
-
-| Alternative | Pros | Cons | Verdict |
-|---|---|---|---|
-| **Device compliance posture** (BeyondCorp / agent-based) | Stronger Zero Trust signal — covers device health *and* identity, and would partially close the stolen-session gap this ADR leaves open | Cannot currently defend the GCP implementation mechanism without fabricating integration details | **Rejected** |
-| **Static session token validation** (no re-auth force) | Simpler client integration, no IdP re-auth latency, no availability coupling | Validates a *standing* session, not *fresh* trust — which is the thing Zero Trust exists to distinguish | **Rejected** |
-| **Risk-based scoring** (anomaly detection, geo-IP) | More sophisticated trust signal; degrades gracefully rather than failing closed | Requires data and models not available; over-engineered for this scope | **Rejected** |
-| **Fail open on IdP unavailability** (cache last-known-good `auth_time`) | Preserves BankVault availability during an IdP outage; no break-glass path needed | The control switches itself off under exactly the conditions most favorable to an attacker. An identity control that fails open is not a control | **Rejected** |
-
----
-
-## Rationale
-
-MFA freshness is the Zero Trust signal that can be drawn, defended, and implemented honestly in the available time. Device posture is the architecturally stronger answer, but the GCP integration details for it aren't known well enough to defend without fabricating them. **A narrow, defensible mechanism beats a broad, hand-waved one.**
-
-The fail-closed decision follows from the same principle. A system whose availability depends on its identity provider is an honest, statable architecture with a known operational cost. A system that grants access to NPI when it cannot verify who is asking is not a weaker version of the same architecture — it is a different architecture, one whose primary control has a documented bypass.
-
----
-
-## Assumptions Requiring Verification
-
-1. The underwriter-facing tool correctly implements `max_age=0` on **every** JIT request. Not verifiable server-side; must be confirmed at client-tool onboarding and re-confirmed on every client change.
-2. The IdP returns the `auth_time` claim in the ID token. Standard OIDC, but bank IdP configurations vary and some suppress it.
-3. The 15-minute window is documented as risk-based policy, **not** presented as an empirically optimized figure.
-4. The circuit-breaker thresholds (3 failures, 60-second cooldown) are not tuned against observed IdP behavior. A real deployment would set them from the IdP's own SLO and error-rate distribution.
-5. A manually-approved, audited break-glass path exists outside this broker for IdP-outage scenarios. **Assumed by this decision; not built by this project.**
-
----
-
-## Related
-
-- [ADR-001: Build vs. Buy — Custom JIT Broker vs. Off-the-Shelf PAM](001-build-vs-buy-jit-access.md)
-- [ADR-003: Scope and Actor Definition](003-scope-and-actor-definition.md) — fixes the actor and the GLBA basis
-- [ADR-005: PAM Grant/Revocation Lifecycle](005-pam-grant-revocation-lifecycle.md) — consumes this check; opens the 30-minute window this ADR does not re-validate
+- **Session validity only.** Rejected. It is the weaker signal and the whole point of the control is to be stronger than the default.
+- **A CEL "MFA freshness" condition on the entitlement.** Rejected because it does not exist. IAM Conditions have no authentication-recency attribute; asserting one would be a fabricated capability.
+- **ACM reauthentication alone, no broker check.** Deferred, not rejected. It is the right defense-in-depth layer, but leaving freshness entirely to a platform setting removes the per-grant `auth_time` record that makes the decision auditable.

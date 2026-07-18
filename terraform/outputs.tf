@@ -1,49 +1,32 @@
-output "pii_bucket_name" {
-  description = "Name of the loan-origination PII bucket protected by JIT grants"
-  value       = google_storage_bucket.loan_origination_pii.name
+output "credit_reports_bucket" {
+  description = "The bucket standing in for the credit-report store."
+  value       = google_storage_bucket.credit_reports.name
 }
 
-output "grant_function_url" {
-  description = "HTTPS URL to invoke grant_access. Not publicly reachable when ingress is ALLOW_INTERNAL_ONLY — invoke via VPC, IAP, or gcloud functions call."
-  value       = google_cloudfunctions2_function.grant_access.service_config[0].uri
+output "entitlement_ids" {
+  description = "PAM entitlements, one per demo application."
+  value       = { for k, e in google_privileged_access_manager_entitlement.credit_report_read : k => e.entitlement_id }
 }
 
-output "grant_sa_email" {
-  description = "Service account email used by grant_access"
-  value       = google_service_account.grant_sa.email
-}
-
-output "revoke_sa_email" {
-  description = "Service account email used by revoke_access"
-  value       = google_service_account.revoke_sa.email
-}
-
-output "revocation_topic_id" {
-  description = "Full resource ID of the Pub/Sub topic that triggers a revocation sweep"
-  value       = google_pubsub_topic.revocation_trigger.id
-}
-
-output "revocation_sweep_schedule" {
-  description = "Cron schedule the revocation sweep runs on"
-  value       = google_cloud_scheduler_job.revocation_sweep.schedule
-}
-
-output "audit_dataset_id" {
-  description = "BigQuery dataset holding the access_grants audit ledger"
-  value       = google_bigquery_dataset.audit.dataset_id
-}
-
-output "audit_table_id" {
-  description = "Fully-qualified BigQuery table ID for the audit ledger"
+output "audit_ledger" {
+  description = "Fully-qualified append-only ledger table."
   value       = "${var.project_id}.${google_bigquery_dataset.audit.dataset_id}.${google_bigquery_table.access_grants.table_id}"
 }
 
-output "platform_logs_dataset_id" {
-  description = "BigQuery dataset receiving the raw Cloud Function execution log export"
+output "platform_logs_dataset" {
+  description = "Independent platform-log export dataset."
   value       = google_bigquery_dataset.platform_logs.dataset_id
 }
 
-output "function_source_bucket" {
-  description = "GCS bucket holding zipped Cloud Function source"
-  value       = google_storage_bucket.function_source.name
+output "request_broker_uri" {
+  description = "Internal URI of the request broker (ALLOW_INTERNAL_ONLY)."
+  value       = google_cloudfunctions2_function.request_broker.url
+}
+
+output "broker_service_account" {
+  value = google_service_account.broker.email
+}
+
+output "reconcile_service_account" {
+  value = google_service_account.reconcile.email
 }

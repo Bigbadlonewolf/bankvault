@@ -1,106 +1,75 @@
 variable "project_id" {
-  description = "GCP project ID where BankVault is deployed"
   type        = string
+  description = "GCP project that hosts BankVault. Required."
 }
 
 variable "region" {
-  description = "GCP region for all regional resources (functions, scheduler, bucket)"
   type        = string
+  description = "Region for the bucket, functions, and scheduler."
   default     = "us-central1"
 }
 
-variable "bq_location" {
-  description = "BigQuery dataset location (multi-region or region)"
+variable "allowed_domain" {
   type        = string
-  default     = "US"
+  description = "Email domain both requester and approver must belong to."
+  default     = "lender.example.com"
 }
 
-variable "pii_bucket_name" {
-  description = "Name of the GCS bucket representing the loan-origination PII store. Must be globally unique — the default interpolates the project ID."
+variable "underwriter_group" {
   type        = string
+  description = "Group email whose members are eligible to request a credit-report grant."
+  default     = "group:underwriters@lender.example.com"
+}
+
+variable "approver_group" {
+  type        = string
+  description = "Group email whose members can approve a grant request. Must differ from the underwriter group (segregation of duties, ADR-003)."
+  default     = "group:underwriting-leads@lender.example.com"
+}
+
+variable "credit_reports_bucket_name" {
+  type        = string
+  description = "Globally unique name for the GCS bucket standing in for the credit-report store. Defaults to a project-scoped name."
   default     = ""
 }
 
-variable "audit_dataset_id" {
-  description = "BigQuery dataset ID for the JIT access audit trail"
-  type        = string
-  default     = "bankvault_audit"
+variable "demo_application_ids" {
+  type        = list(string)
+  description = "Loan applications that get a pre-provisioned, object-scoped PAM entitlement. One entitlement per application (ADR-003, architecture.md limitation)."
+  default     = ["APP-1001", "APP-1002"]
 }
 
-variable "audit_table_id" {
-  description = "BigQuery table ID for the access_grants audit ledger"
-  type        = string
-  default     = "access_grants"
-}
-
-variable "platform_logs_dataset_id" {
-  description = "BigQuery dataset ID that receives the raw Cloud Logging export (Cloud Function execution logs) via the log sink"
-  type        = string
-  default     = "bankvault_platform_logs"
-}
-
-variable "grant_function_name" {
-  description = "Name of the HTTP-triggered Cloud Function that validates and applies time-bound access grants"
-  type        = string
-  default     = "bankvault-grant-access"
-}
-
-variable "revoke_function_name" {
-  description = "Name of the Pub/Sub-triggered Cloud Function that sweeps expired grants and revokes IAM bindings"
-  type        = string
-  default     = "bankvault-revoke-access"
-}
-
-variable "revocation_topic_name" {
-  description = "Pub/Sub topic that Cloud Scheduler publishes to in order to trigger a revocation sweep"
-  type        = string
-  default     = "bankvault-revocation-trigger"
-}
-
-variable "revocation_schedule" {
-  description = "Cron schedule (unix-cron) for the revocation sweep. Default runs every 5 minutes — the gap between window expiry and binding removal on the IAM policy itself; the CEL condition denies access immediately regardless of this schedule."
-  type        = string
-  default     = "*/5 * * * *"
-}
-
-variable "revocation_schedule_timezone" {
-  description = "IANA timezone for the Cloud Scheduler cron expression"
-  type        = string
-  default     = "Etc/UTC"
-}
-
-variable "max_grant_duration_minutes" {
-  description = "Hard ceiling on how long a single JIT grant window may last, enforced by grant_access regardless of what a caller requests. PCI DSS 7.2 / FFIEC least-privilege guidance: keep the window as short as the business task allows."
+variable "max_grant_minutes" {
   type        = number
-  default     = 240
+  description = "Maximum minutes a credit-report grant can last. PAM caps and expires the grant at this bound (ADR-001, ADR-005)."
+  default     = 30
+
+  validation {
+    condition     = var.max_grant_minutes > 0 && var.max_grant_minutes <= 120
+    error_message = "max_grant_minutes must be between 1 and 120. A privileged credit-report read does not need hours."
+  }
 }
 
-variable "allowed_requester_domain" {
-  description = "Email domain loan officers must belong to for a grant request to be accepted (e.g. bank.example.com). Set to an empty string to disable the check in a sandbox project."
+variable "max_auth_age_seconds" {
+  type        = number
+  description = "How fresh the underwriter's login must be, in seconds, for the broker to create a grant (ADR-004). Passed to request_broker."
+  default     = 300
+}
+
+variable "reconcile_schedule" {
   type        = string
+  description = "Cron for the detect-only reconcile sweep (ADR-005)."
+  default     = "*/15 * * * *"
+}
+
+variable "function_source_bucket_name" {
+  type        = string
+  description = "Bucket that holds the zipped Cloud Function source. Defaults to a project-scoped name."
   default     = ""
 }
 
-variable "grant_function_ingress" {
-  description = "Ingress setting for the grant_access HTTP function. ALLOW_INTERNAL_ONLY restricts invocation to VPC/Cloud IAP-fronted callers; ALLOW_ALL is for local portfolio testing only."
-  type        = string
-  default     = "ALLOW_INTERNAL_ONLY"
-}
-
-variable "enable_example_jit_grant" {
-  description = "When true, provisions one Terraform-managed example time-bound IAM binding on the PII bucket for demo_loan_officer_email, illustrating the CEL condition pattern the functions apply at runtime. Off by default — production grants are created dynamically by grant_access, never by Terraform."
-  type        = bool
-  default     = false
-}
-
-variable "demo_loan_officer_email" {
-  description = "Email of the demo principal used only when enable_example_jit_grant is true"
-  type        = string
-  default     = "loan.officer@example.com"
-}
-
-variable "demo_grant_expiry" {
-  description = "RFC3339 timestamp used as the CEL condition expiry for the example binding when enable_example_jit_grant is true"
-  type        = string
-  default     = "2026-12-31T23:59:59Z"
+variable "labels" {
+  type        = map(string)
+  description = "Extra labels merged onto every labelable resource."
+  default     = {}
 }

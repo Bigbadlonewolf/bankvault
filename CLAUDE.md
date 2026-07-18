@@ -1,24 +1,27 @@
 # CLAUDE.md
 
-Guidance for working in this repo. BankVault is a Week 1 portfolio build — a JIT privilege elevation broker for a mock bank's loan origination pipeline. Read this before touching Terraform or the two Cloud Functions.
+Guidance for working in this repo. BankVault is a portfolio reference architecture: a just-in-time privilege elevation broker for a mock mortgage lender's loan-origination pipeline, built on Google Cloud Privileged Access Manager (PAM). Read this before touching Terraform or the two Cloud Functions.
 
-## What This Is
-Two Cloud Functions (`grant_access`, `revoke_access`) that apply and remove time-bound, resource-bound IAM Conditions on a GCS bucket standing in for a loan-origination PII store. Every action — grant, denial, revocation — is an append-only row in a BigQuery audit ledger. No standing access exists anywhere in this system.
+## What this is
 
-## Architecture
+No underwriter holds standing access to a borrower's credit report. Each read is a time-bound, object-scoped PAM grant, gated on a fresh login by the request broker, and written to an append-only BigQuery ledger. PAM owns approval and expiry; nothing in this repo revokes anything.
+
 ```
-Loan officer ──POST──▶ grant_access ──▶ conditional IAM binding on PII bucket
-                            │               (request.time < timestamp(...))
-                            ├──▶ Secret Manager (session token)
-                            └──▶ BigQuery access_grants (GRANT/DENY row)
+Underwriter ──POST──▶ request_broker
+                          ├─ verify_mfa_freshness   (reject stale login, ADR-004)
+                          ├─ validate_request       (domain, SoD, duration cap, app id)
+                          ├─ create_pam_grant        (PAM grants.create on the entitlement)
+                          └─ write_ledger_row        (BigQuery access_grants: REQUEST/GRANT/DENY)
 
-Cloud Scheduler ──▶ Pub/Sub ──▶ revoke_access ──▶ removes expired bindings,
-                                                    destroys secrets,
-                                                    writes REVOKE row
+PAM entitlement (per application) ─▶ conditional roles/storage.objectViewer on the
+                                     credit-report object prefix. PAM auto-expires the grant.
 
-Cloud Logging (both functions) ──▶ log sink ──▶ BigQuery platform_logs
+Cloud Scheduler ─▶ Pub/Sub ─▶ reconcile   (detect-only: flags overruns, ADR-005)
+
+Cloud Logging (broker, reconcile, PAM audit) ─▶ sink ─▶ BigQuery platform_logs
 ```
-Full diagram with field-level detail: `README.md`.
+
+Full diagram and field detail: `docs/architecture.md`.
 
 ## Commands
 
@@ -28,7 +31,7 @@ cd terraform
 terraform fmt -check -recursive
 terraform init -backend=false     # CI uses this; no state, no credentials needed
 terraform validate
-terraform plan -var-file=terraform.tfvars    # needs terraform.tfvars + real GCP creds
+terraform plan -var-file=terraform.tfvars   # needs terraform.tfvars + real GCP creds
 ```
 
 ### Tests
@@ -38,30 +41,36 @@ source .venv/Scripts/activate      # .venv/bin/activate on macOS/Linux
 pip install -r tests/requirements-test.txt
 pytest tests/ -v
 ```
+Tests need only `functions-framework` and `pytest`. The GCP and PAM calls are lazy imports behind seams the tests patch, so no `google-cloud-*` library is required to run them.
 
-### Local function invocation (functions-framework, no real GCP required to boot)
+### Local function invocation
 ```bash
-scripts/run-local.sh grant     # serves grant_access on :8080
-scripts/run-local.sh revoke    # serves revoke_access on :8081 (cloudevent signature)
+scripts/run-local.sh broker      # HTTP :8080, entry handle_request
+scripts/run-local.sh reconcile   # CloudEvent :8081, entry handle_event
 ```
 
-## Conventions
+## Conventions and gotchas
 
-### Secrets
-- Session tokens live in Secret Manager only, under the `bankvault-session-<request_id>` naming prefix — never logged, never returned in a response body beyond the secret's resource name.
-- `grant_sa` and `revoke_sa` hold `roles/secretmanager.admin` scoped by an IAM condition to that prefix (`resource.name.startsWith(...)`) — neither SA can read or create any other secret in the project. Don't widen this without a specific reason; it's the resource-bound-grant pattern applied a second time, not an oversight.
+### PAM entitlements
+- The entitlement's `condition_expression` is **static per entitlement**, so object scope is per-application, not per-request. That is why there is one entitlement per application (`terraform/pam.tf`, `for_each` over `demo_application_ids`). Do not try to make the condition vary per request; PAM does not support it. If you need unbounded applications, that is the documented limitation in `docs/architecture.md`, not a bug to patch away.
+- **Time-bounding is PAM's `max_request_duration`, not a `request.time` CEL clause.** PAM expires the grant. Do not add a timestamp condition and call it the expiry; that duplicates PAM and drifts.
+- The literal `_` in `projects/_/buckets/<bucket>/objects/<app>/` is required by GCS's CEL resource-name format. It is not a placeholder.
+- `create_pam_grant` and `_check_pam_grant_active` carry a VERIFY-BEFORE-DEPLOY note (ADR-001): the grant-request caller/grantee semantics must be confirmed against the live PAM API. Keep that note until it is verified against a real project.
 
-### IAM condition (CEL) gotchas
-- Conditional bindings require **IAM policy version 3** — always call `get_iam_policy(requested_policy_version=3)` and set `policy.version = 3` before appending a binding, or the condition silently fails to attach.
-- `request.time` compares against the timestamp on the *evaluation* request, not the binding's creation time — this is what makes the CEL expiry self-enforcing without `revoke_access` running.
-- The resource-bound clause uses `resource.name.startsWith("projects/_/buckets/<bucket>/objects/<prefix>")` — the literal `_` is required by GCS's CEL resource-name format, it is not a placeholder to fill in.
-- `remove_iam_binding` matches on `(role, member, condition.expression)` exactly — two grants for the same loan officer with different expiries produce different `condition.expression` strings and won't collide during revocation. Don't "simplify" the match to `(role, member)` only; that would revoke unrelated active grants for the same user.
+### MFA freshness (ADR-004)
+- Freshness is enforced in the broker, not by an IAM Condition. GCP IAM has no authentication-recency attribute. Do not "move it into a CEL condition"; that capability does not exist.
+- Fail-closed: a missing or unreadable `auth_time` is a rejection, never a pass. Keep it that way.
+- `verify_mfa_freshness` decodes the JWT claims segment only; it does not verify the signature. That stub boundary is stated in the README. If you add real JWKS verification, update the README's "What this isn't".
 
 ### Audit ledger
-- `access_grants` is append-only. Never write an `UPDATE` against it — a request's lifecycle (GRANT → REVOKE, or just DENY) is reconstructed by querying `request_id`, not by mutating a status column. This is what makes the ledger useful as SOX 404 evidence.
-- `revoke_access` finds work via `NOT EXISTS` against the same table (grant rows past `window_end` with no matching revoke row) — this is intentional; there's no separate "active grants" state table to fall out of sync.
+- `access_grants` is append-only. Never write an `UPDATE`. A request's lifecycle is reconstructed by querying `request_id`, not by mutating a status column. This is what makes it SOX 404 evidence.
+- `reconcile` only ever writes `EXPIRE_FLAG` rows. This is a code-level invariant with a test behind it (`tests/test_reconcile.py::test_reconcile_has_no_revoke_path`), not an IAM boundary. Do not add a revoke path without an ADR that argues for containment over detection (ADR-005).
 
 ### Naming
-- Terraform resources: `snake_case`, grouped by concern into `iam.tf` / `bigquery.tf` / `functions.tf` / `scheduler.tf` — don't add a fifth cross-cutting file without a reason.
-- Cloud Function source dirs mirror function names: `functions/grant_access/`, `functions/revoke_access/`. Each is a self-contained `main.py` + `requirements.txt`, zipped independently by `terraform/functions.tf`.
-- Python: kebab-case is not used here — standard `snake_case` for functions/variables, matching the rest of the workspace's Python conventions.
+- Terraform: `snake_case`, grouped by concern into `storage.tf` / `pam.tf` / `iam.tf` / `bigquery.tf` / `functions.tf` / `scheduler.tf` / `logging.tf`. Don't add a cross-cutting file without a reason.
+- Function source dirs mirror function names: `functions/request_broker/`, `functions/reconcile/`. Each is a self-contained `main.py` + `requirements.txt`, zipped independently by `terraform/functions.tf`.
+- Python: standard `snake_case`.
+
+## The one thing not to undo
+
+ADR-001 records a reversal: the first version's custom revoke function was deleted when GCP PAM made it redundant. If you find yourself reintroducing a custom grant/revoke lifecycle, stop and read ADR-001 first. The absence of that code is the decision, not an omission.
