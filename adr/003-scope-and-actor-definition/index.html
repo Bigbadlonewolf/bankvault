@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Just-in-time privilege elevation for a mock retail bank's loan origination pipeline">
+        <meta name="description" content="Just-in-time privilege elevation for a mock mortgage lender, built on GCP Privileged Access Manager.">
       
       
       
@@ -21,15 +21,15 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>ADR-003: Scope and Actor Definition - BankVault</title>
+        <title>ADR-003: Scope and actor definition - BankVault</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -67,7 +67,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ADR-003: Scope and Actor Definition
+              ADR-003: Scope and actor definition
             
           </span>
         </div>
@@ -125,7 +125,21 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
     
   
 </form>
@@ -251,7 +265,7 @@
   <span class="md-ellipsis">
     
   
-    Home
+    Overview
   
 
     
@@ -295,6 +309,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../../controls-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -313,17 +354,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
   <span class="md-ellipsis">
     
   
-    Architecture Decisions
+    Decision records
   
 
     
@@ -334,12 +375,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Architecture Decisions
+    Decision records
   
 
           </label>
@@ -352,14 +393,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../001-build-vs-buy-jit-access/" class="md-nav__link">
+      <a href="../001-build-vs-buy-jit-broker/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    ADR-001: Build vs. Buy
+    ADR-001: Build vs. Buy, reversed
   
 
     
@@ -387,7 +428,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-002: Workforce Identity Federation vs. IAP
+    ADR-002: Two directories is one too many
   
 
     
@@ -424,7 +465,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-003: Scope and Actor Definition
+    ADR-003: Scope and actor definition
   
 
     
@@ -442,7 +483,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-003: Scope and Actor Definition
+    ADR-003: Scope and actor definition
   
 
     
@@ -490,17 +531,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#consequences" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Consequences
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#rationale" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -512,10 +542,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#glba-basis" class="md-nav__link">
+  <a href="#consequences" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GLBA Basis
+        Consequences
       
     </span>
   </a>
@@ -526,18 +556,7 @@
   <a href="#alternatives-considered" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alternatives Considered
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assumptions-requiring-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Assumptions Requiring Verification
+        Alternatives considered
       
     </span>
   </a>
@@ -567,7 +586,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-004: MFA Freshness as the Zero Trust Signal
+    ADR-004: MFA freshness as the signal
   
 
     
@@ -588,14 +607,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../005-pam-grant-revocation-lifecycle/" class="md-nav__link">
+      <a href="../005-pam-grant-lifecycle/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    ADR-005: PAM Grant/Revocation Lifecycle
+    ADR-005: Grant lifecycle, detect not contain
   
 
     
@@ -612,33 +631,6 @@
           </ul>
         </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../controls-mapping/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Compliance Coverage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -692,17 +684,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#consequences" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Consequences
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#rationale" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -714,10 +695,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#glba-basis" class="md-nav__link">
+  <a href="#consequences" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GLBA Basis
+        Consequences
       
     </span>
   </a>
@@ -728,18 +709,7 @@
   <a href="#alternatives-considered" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alternatives Considered
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assumptions-requiring-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Assumptions Requiring Verification
+        Alternatives considered
       
     </span>
   </a>
@@ -766,74 +736,45 @@
   
 
 
-<h1 id="adr-003-scope-and-actor-definition">ADR-003: Scope and Actor Definition<a class="headerlink" href="#adr-003-scope-and-actor-definition" title="Permanent link">&para;</a></h1>
-<p><strong>Date</strong>: 2026-07-08
-<strong>Status</strong>: Accepted
-<strong>Authors</strong>: Lanre Oluokun
-<strong>Implementation</strong>: N/A (scope decision, no code artifact)</p>
-<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
-<p>BankVault is a GCP-native Just-In-Time (JIT) access broker. This ADR defines the single actor-resource pair the system is built around, and the reasoning for choosing that pair over other high-risk candidates that exist in a non-bank lender's environment.</p>
-<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
-<p>Bind the architecture to a single, GLBA-governed actor-resource pair (a loan underwriter requesting temporary, read-only access to a credit bureau report) rather than building a general-purpose JIT platform. Compliance-first design for one concrete threat model produces a verifiable architecture; a general-purpose design at this stage would require hand-waving the parts that aren't built.</p>
-<p>The credit report (e.g., an Experian or TransUnion pull) is treated as already present in Cloud Storage, placed there by an upstream ingestion process. BankVault's scope begins at the storage layer. It does not integrate with, and makes no claims about, the credit bureau's own API or ingestion pipeline.</p>
-<p><strong>Why this pair, not another:</strong> a non-bank mortgage lender has several plausible high-risk actor-resource pairs: a customer service rep against an account ledger, a compliance officer against an audit trail, an underwriter against a credit report. The underwriter/credit-report pair was chosen because it has the sharpest single regulatory driver (GLBA NPI protections apply directly, not by analogy), the clearest natural time-boundary (access is bounded by one loan decision, not an open-ended job function), and it avoids a harder, different problem: a CSR's ledger access or an auditor's access is typically standing, role-based access, which calls for RBAC hygiene, not JIT elevation. That's a different architecture than the one this project builds.</p>
-<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
-<p><strong>Positive:</strong>
-- Tight coupling to a real regulated business process (loan origination) with a natural time-box tied to the loan decision SLA.
-- A specific regulatory citation applies without interpretation, with FTC enforcement authority matching the entity type described here.
-- A specific, defensible actor-resource pair that can be validated end-to-end in a 20-minute technical deep dive.
-- The narrow scope forces the architecture to optimize for one threat model rather than abstracting prematurely.</p>
-<p><strong>Negative (real trade-offs, not just exclusions):</strong>
-- This proves depth on one flow, not breadth across actor types. It does not demonstrate whether the entitlement-per-resource pattern holds up with multiple concurrent actors or resources without further design work.
-- It deliberately does not address standing/role-based access patterns (the CSR/ledger case), which are arguably higher-volume risk surface for a real lender than one underwriter's occasional credit pull. That's a known, accepted gap in coverage, not an oversight.</p>
-<h2 id="rationale">Rationale<a class="headerlink" href="#rationale" title="Permanent link">&para;</a></h2>
-<p>A narrow, deep, compliance-grounded reference flow can be reasoned about completely: every control decision maps to a specific regulation, a specific actor, and a specific resource, not to a hypothetical range of use cases a broader platform would need to hand-wave at this stage. This principle holds independent of timeline. It also happens to fit the available build time, which is a reason to build this flow first, not a reason the principle is true.</p>
-<h2 id="glba-basis">GLBA Basis<a class="headerlink" href="#glba-basis" title="Permanent link">&para;</a></h2>
-<p>Verified against 16 CFR 314.4, not assumed.</p>
+<h1 id="adr-003-scope-and-actor-definition">ADR-003: Scope and actor definition<a class="headerlink" href="#adr-003-scope-and-actor-definition" title="Permanent link">&para;</a></h1>
 <ul>
-<li><strong>314.4(c)(1)(i)–(ii):</strong> requires authenticating and permitting access only to authorized users, and limiting authorized users' access to only the customer information they need to perform their duties. That's the basis for the JIT, need-based access model carried into ADR-004 and ADR-005.</li>
-<li><strong>314.4(c)(8):</strong> requires monitoring and logging authorized-user activity and detecting unauthorized access. That's the basis for the audit-logging requirement in ADR-005.</li>
-<li><strong>Scope note:</strong> 16 CFR 314 covers non-bank financial institutions under FTC jurisdiction. Mortgage lenders and brokers are named explicitly among the Rule's own covered-entity examples (314.2(h)). A chartered bank falls under Interagency Guidelines from its own prudential regulator (OCC/FDIC/Federal Reserve) instead, a separate instrument. This project's institution type (non-bank mortgage lender) is written to match the citation actually used.</li>
+<li><strong>Status:</strong> Accepted</li>
+<li><strong>Date:</strong> 2026-07-08</li>
+<li><strong>Deciders:</strong> Lanre</li>
+<li><strong>Related:</strong> ADR-001, ADR-004</li>
 </ul>
-<h2 id="alternatives-considered">Alternatives Considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Alternative</th>
-<th>Pros</th>
-<th>Cons</th>
-<th>Verdict</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>General-purpose, multi-actor/multi-resource JIT platform</td>
-<td>Demonstrates broader platform thinking; reusable across more lender workflows</td>
-<td>At this stage, requires designing and defending controls for actor and resource types not yet modeled, producing a shallower, harder-to-defend result overall</td>
-<td>Rejected</td>
-</tr>
-<tr>
-<td>Broad "any restricted GCS bucket" scope, no named regulation</td>
-<td>Simpler to describe; not tied to one specific rule</td>
-<td>Weaker regulatory teeth: doesn't demonstrate GLBA-specific reasoning, which is the actual differentiator for a financial-services role</td>
-<td>Rejected</td>
-</tr>
-<tr>
-<td>Standing/role-based access for the underwriter (no JIT elevation)</td>
-<td>Simpler to implement; no grant/revoke lifecycle needed</td>
-<td>Defeats the Zero Trust/least-privilege premise the rest of this ADR set is built on</td>
-<td>Rejected</td>
-</tr>
-</tbody>
-</table>
-<h2 id="assumptions-requiring-verification">Assumptions Requiring Verification<a class="headerlink" href="#assumptions-requiring-verification" title="Permanent link">&para;</a></h2>
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>"Just-in-time access for a bank" can mean almost anything: every employee, every system, every data class. A scope that broad produces a design that is impressive in a diagram and false in every particular, because no single mechanism actually governs all of it. Before any Terraform, the project needed one honest, defensible boundary.</p>
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<p>One actor, one resource, one regulated data class:</p>
 <ul>
-<li>The loan underwriter is an actual human user with a Google Identity account (not a service account, not a shared account).</li>
-<li>The lender's loan origination system has a well-defined "underwriter" role mapping to a single Google Identity group or organizational unit.</li>
-<li>The credit bureau report is already stored in Cloud Storage; BankVault does not pull from Experian/TransUnion APIs. It brokers access to the stored object only.</li>
-<li>The upstream ingestion process that places the credit report into Cloud Storage is out of BankVault's scope and is assumed to enforce its own access controls on the bureau-side pull.</li>
-<li>GLBA is the applicable regulation for this data; FCRA, PCI DSS, or state privacy laws may impose additional constraints on this specific flow. Not verified here, and a real deployment would need to confirm this against counsel, not just this ADR.</li>
-<li>"One loan decision" as the natural time boundary is asserted here as the rationale; the actual grant-window duration enforcing that boundary is a separate decision, made in ADR-005.</li>
+<li><strong>Actor:</strong> an underwriter in the loan-origination pipeline.</li>
+<li><strong>Resource:</strong> a single borrower's credit report, stored as an object under a per-application prefix in one GCS bucket.</li>
+<li><strong>Data class:</strong> consumer financial information under the GLBA Safeguards Rule.</li>
+</ul>
+<p>Everything else (other roles, other data stores, session access to servers, database credentials) is explicitly out of scope for this build. The pattern is meant to generalize; the build does not pretend to have generalized yet.</p>
+<h2 id="rationale">Rationale<a class="headerlink" href="#rationale" title="Permanent link">&para;</a></h2>
+<p>The underwriter-reading-a-credit-report flow is the smallest thing that still exercises the whole control:</p>
+<ul>
+<li>It is a genuinely privileged read. A credit report is exactly the data GLBA exists to protect, so least-privilege here is not a toy example.</li>
+<li>It has a natural, narrow object scope (one application's file), which makes the IAM Condition's <code>resource.name.startsWith(...)</code> clause meaningful rather than decorative.</li>
+<li>It has a real segregation-of-duties story: the underwriter who requests is not the lead who approves.</li>
+<li>It has a clean expiry story: nobody needs to read one credit report for longer than a QC pass, so a 30-minute cap is defensible rather than arbitrary.</li>
+</ul>
+<p>Picking the narrow flow is what lets every later claim be specific. "An underwriter gets 30 minutes on one credit report" is checkable. "The bank has zero-trust access" is not.</p>
+<p>The GLBA basis is deliberate. 16 CFR 314.4(c)(1) requires access controls limiting customer information to authorized users. A credit report is customer financial information. That gives the whole design a regulatory anchor instead of a general "security is good" motivation, and it is why the controls mapping (<code>docs/controls-mapping.md</code>) leads with GLBA.</p>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<p><strong>Positive</strong>
+- Every downstream claim is specific and checkable, because the scope is one flow.
+- The IAM Condition, the SoD check, and the expiry cap all have a concrete, defensible justification rather than a generic one.
+- The controls mapping is honest: it maps one pattern to specific clauses, not a whole program to a framework.</p>
+<p><strong>Negative</strong>
+- The build does not demonstrate multi-resource support, multiple actor roles, or non-GCS data stores. Those are asserted as "the pattern generalizes," which is a claim, not a demonstration.
+- A reviewer looking for breadth will find depth on one flow instead. That is the intended trade, but it is a trade.</p>
+<h2 id="alternatives-considered">Alternatives considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>All privileged roles across the pipeline.</strong> Rejected. It would force the design to hand-wave over data stores the mechanism does not actually govern, and every claim would have to be hedged.</li>
+<li><strong>A non-regulated resource (internal tooling access).</strong> Rejected. It loses the GLBA anchor and makes the compliance mapping generic instead of specific.</li>
 </ul>
 
 
@@ -854,6 +795,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -884,10 +831,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

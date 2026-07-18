@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Just-in-time privilege elevation for a mock retail bank's loan origination pipeline">
+        <meta name="description" content="Just-in-time privilege elevation for a mock mortgage lender, built on GCP Privileged Access Manager.">
       
       
       
@@ -14,14 +14,14 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="../adr/001-build-vs-buy-jit-access/">
+        <link rel="next" href="../controls-mapping/">
       
       
         
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -67,7 +67,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -125,7 +125,21 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
     
   
 </form>
@@ -251,7 +265,7 @@
   <span class="md-ellipsis">
     
   
-    Home
+    Overview
   
 
     
@@ -331,10 +345,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-enforcement-doesnt-depend-on-the-scheduler" class="md-nav__link">
+  <a href="#the-request-path-field-by-field" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why Enforcement Doesn't Depend on the Scheduler
+        The request path, field by field
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-enforcement-does-not-depend-on-any-code-in-this-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why enforcement does not depend on any code in this repo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-there-is-still-a-reconcile-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why there is still a reconcile job
       
     </span>
   </a>
@@ -345,7 +381,40 @@
   <a href="#why-the-audit-ledger-is-append-only" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why the Audit Ledger Is Append-Only
+        Why the audit ledger is append-only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#identity-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identity plane
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trust-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trust boundaries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-deliberately-out-of-scope-for-this-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is deliberately out of scope for this build
       
     </span>
   </a>
@@ -356,6 +425,33 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controls-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -380,17 +476,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
   <span class="md-ellipsis">
     
   
-    Architecture Decisions
+    Decision records
   
 
     
@@ -401,12 +497,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Architecture Decisions
+    Decision records
   
 
           </label>
@@ -419,14 +515,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/001-build-vs-buy-jit-access/" class="md-nav__link">
+      <a href="../adr/001-build-vs-buy-jit-broker/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    ADR-001: Build vs. Buy
+    ADR-001: Build vs. Buy, reversed
   
 
     
@@ -454,7 +550,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-002: Workforce Identity Federation vs. IAP
+    ADR-002: Two directories is one too many
   
 
     
@@ -482,7 +578,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-003: Scope and Actor Definition
+    ADR-003: Scope and actor definition
   
 
     
@@ -510,7 +606,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-004: MFA Freshness as the Zero Trust Signal
+    ADR-004: MFA freshness as the signal
   
 
     
@@ -531,14 +627,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/005-pam-grant-revocation-lifecycle/" class="md-nav__link">
+      <a href="../adr/005-pam-grant-lifecycle/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    ADR-005: PAM Grant/Revocation Lifecycle
+    ADR-005: Grant lifecycle, detect not contain
   
 
     
@@ -555,33 +651,6 @@
           </ul>
         </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../controls-mapping/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Compliance Coverage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -613,10 +682,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-enforcement-doesnt-depend-on-the-scheduler" class="md-nav__link">
+  <a href="#the-request-path-field-by-field" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why Enforcement Doesn't Depend on the Scheduler
+        The request path, field by field
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-enforcement-does-not-depend-on-any-code-in-this-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why enforcement does not depend on any code in this repo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-there-is-still-a-reconcile-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why there is still a reconcile job
       
     </span>
   </a>
@@ -627,7 +718,40 @@
   <a href="#why-the-audit-ledger-is-append-only" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why the Audit Ledger Is Append-Only
+        Why the audit ledger is append-only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#identity-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identity plane
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trust-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trust boundaries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-deliberately-out-of-scope-for-this-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is deliberately out of scope for this build
       
     </span>
   </a>
@@ -655,46 +779,123 @@
 
 
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
-<pre><code>Loan officer / caller
-        │  POST { requested_by, approved_by, justification, duration_minutes, loan_application_id }
-        ▼
-  grant_access (Cloud Function v2, HTTP, Python 3.12)
-        ├── validate_request()        — domain check, segregation of duties, duration cap
-        ├── apply_iam_binding()       — conditional google_storage_bucket_iam_member via IAM API
-        │                               CEL: request.time &lt; timestamp(...) [&amp;&amp; resource.name.startsWith(...)]
-        ├── create_session_secret()   — short-lived token → Secret Manager (bankvault-session-&lt;request_id&gt;)
-        └── write_audit_row()         — INSERT into BigQuery access_grants (action_type=GRANT|DENY)
-        │
-        ▼
-  loan-origination-pii bucket (GCS, uniform access, versioned, public access blocked)
-        │  access denied automatically once request.time crosses window_end — no code involved
-        │
-        ▼
-  Cloud Scheduler (*/5 * * * *) ──▶ Pub/Sub: bankvault-revocation-trigger
-        │
-        ▼
-  revoke_access (Cloud Function v2, Pub/Sub-triggered, Python 3.12)
-        ├── find_expired_unrevoked_grants() — SQL: GRANT rows past window_end with no REVOKE row
-        ├── remove_iam_binding()             — strips the now-inert conditional binding
-        ├── delete_session_secret()          — destroys the Secret Manager secret
-        └── write_revoke_row()                — INSERT into BigQuery access_grants (action_type=REVOKE)
-
-  Cloud Logging (both functions' execution logs)
-        │
-        ▼  google_logging_project_sink
-  BigQuery: bankvault_platform_logs   — independent record, survives an application-code bug
-</code></pre>
-<h2 id="why-enforcement-doesnt-depend-on-the-scheduler">Why Enforcement Doesn't Depend on the Scheduler<a class="headerlink" href="#why-enforcement-doesnt-depend-on-the-scheduler" title="Permanent link">&para;</a></h2>
-<p>The CEL expression <code>request.time &lt; timestamp(&lt;window_end&gt;)</code> is evaluated by GCP's IAM policy engine at the moment a request against the bucket is made — not by any code in this repo. A loan officer's access is denied the instant the clock crosses <code>window_end</code>, whether or not <code>revoke_access</code> has run yet.</p>
-<p><code>revoke_access</code> exists for two things the CEL condition can't do on its own: removing the now-inert binding from the bucket's IAM policy (so the policy doesn't accumulate stale entries indefinitely), and destroying the session secret plus writing the <code>REVOKE</code> row that closes out the audit ledger entry for that request. A delay in the sweep is a hygiene and audit-completeness issue, not an access-control gap.</p>
-<h2 id="why-the-audit-ledger-is-append-only">Why the Audit Ledger Is Append-Only<a class="headerlink" href="#why-the-audit-ledger-is-append-only" title="Permanent link">&para;</a></h2>
-<p><code>access_grants</code> never receives an <code>UPDATE</code>. Every lifecycle event — a grant, a denial, a revocation — is a new row keyed by <code>request_id</code>. Reconstructing "is this grant still active" is a query (<code>GRANT</code> row with no matching <code>REVOKE</code> row), not a status field someone could quietly edit after the fact. That property is what makes the ledger usable as SOX 404 ITGC evidence: the history can't be rewritten, only appended to.</p>
+<p>BankVault is one narrow flow done carefully: one actor, one resource, one regulated data class. An underwriter reads one borrower's credit report for 30 minutes, gated on a fresh login, and never holds that access outside the window.</p>
+<h2 id="the-request-path-field-by-field">The request path, field by field<a class="headerlink" href="#the-request-path-field-by-field" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>Underwriter
+    │  POST /request
+    │  { requested_by, approved_by, application_id, justification, id_token }
+    ▼
+request_broker (Cloud Function v2, HTTP, Python 3.12)
+    ├── verify_mfa_freshness(id_token)
+    │       decode the OIDC token, read auth_time, reject if
+    │       now - auth_time &gt; max_auth_age_seconds (default 300).
+    │       This is a broker-side check against the identity provider,
+    │       NOT an IAM Condition. GCP IAM has no &quot;how recently did this
+    │       principal MFA&quot; attribute. See ADR-004.
+    │
+    ├── validate_request()
+    │       requested_by and approved_by share the allowed domain,
+    │       requested_by != approved_by (segregation of duties),
+    │       duration_minutes &lt;= max_grant_minutes,
+    │       application_id matches the known-application pattern.
+    │       Any failure writes a DENY row and returns before any PAM call.
+    │
+    ├── create_pam_grant()
+    │       call PAM grants.create against the entitlement
+    │       bankvault-credit-report-read. The entitlement (provisioned by
+    │       Terraform, not by this function) already carries:
+    │         - role: roles/storage.objectViewer
+    │         - the IAM Condition pinning object path + expiry
+    │         - the max-duration cap
+    │         - the approval requirement
+    │       The function passes justification and the resolved object
+    │       prefix; PAM handles approval routing and, on approval,
+    │       activates the conditioned grant.
+    │
+    └── write_ledger_row()
+            INSERT one row into BigQuery access_grants for every outcome:
+            REQUEST (received), GRANT (PAM grant created), or DENY (rejected).
+    ▼
+credit-reports bucket (GCS)
+    uniform bucket-level access, object versioning on,
+    public access prevention enforced, no ACLs.
+</code></pre></div>
+<h2 id="why-enforcement-does-not-depend-on-any-code-in-this-repo">Why enforcement does not depend on any code in this repo<a class="headerlink" href="#why-enforcement-does-not-depend-on-any-code-in-this-repo" title="Permanent link">&para;</a></h2>
+<p>Two mechanisms bound an underwriter's access, and neither is a function in this repo. One handles <em>time</em>, the other handles <em>scope</em>.</p>
+<ol>
+<li>
+<p><strong>Time: PAM grant expiry.</strong> Privileged Access Manager owns the grant lifecycle. The entitlement's <code>max_request_duration</code> caps the grant at 30 minutes, and PAM expires it when the duration elapses, removing the conditional binding it added. That is the capability that let the first version's custom revocation function be deleted (ADR-001). There is deliberately no <code>request.time &lt; timestamp(...)</code> CEL clause: a PAM entitlement's condition is static, expiry is PAM's job, and duplicating it in a condition would be two timers that can disagree.</p>
+</li>
+<li>
+<p><strong>Scope: the IAM Condition.</strong> The granted binding carries <code>resource.name.startsWith("projects/_/buckets/&lt;bucket&gt;/objects/&lt;application_id&gt;/")</code>. GCP's IAM policy engine evaluates that at the moment a request hits the bucket. A grant issued for application <code>APP-1001</code> cannot read <code>APP-1002</code>'s file, because the clause fails on the resource name. The literal <code>_</code> in that path is required by GCS's CEL resource-name format; it is not a placeholder to fill in.</p>
+</li>
+</ol>
+<p>Because the condition is static per entitlement, object scope is per-application, not per-request: each application gets its own entitlement (<code>terraform/pam.tf</code>, <code>for_each</code> over <code>demo_application_ids</code>). That is a real limitation, not a hidden one. For a fixed demo set it is clean; for an unbounded set of applications, per-object isolation would move to a per-request grant condition or a separate mechanism (per-object buckets, signed URLs). That is listed under out-of-scope below rather than claimed as done.</p>
+<h2 id="why-there-is-still-a-reconcile-job">Why there is still a reconcile job<a class="headerlink" href="#why-there-is-still-a-reconcile-job" title="Permanent link">&para;</a></h2>
+<p>If PAM expires grants on its own, the reconcile job looks redundant. It is not, but it is also honestly limited.</p>
+<p>It exists for two things the expiry path does not give you:</p>
+<ul>
+<li>
+<p><strong>Ledger completeness.</strong> The <code>access_grants</code> ledger is the SOX 404 evidence artifact. The reconcile job confirms every GRANT row whose <code>window_end</code> has passed has a corresponding close-out (an EXPIRE row), and writes one if the lifecycle event was never recorded. Without it, a function crash between grant and expiry could leave a grant that looks perpetually open in the ledger even though PAM expired it.</p>
+</li>
+<li>
+<p><strong>Anomaly detection.</strong> It cross-checks the ledger against live PAM grant state and flags a grant that PAM still reports active past its <code>window_end</code>, or an IAM binding on the bucket that no ledger row explains.</p>
+</li>
+</ul>
+<p>What it does <strong>not</strong> do is revoke. It writes an <code>EXPIRE_FLAG</code> row and emits a structured alert log. So the defensible claim is "an overrun is detected within roughly one reconcile interval (15 minutes)," not "contained within 15 minutes." Those are different sentences and only one of them is true. If you need containment rather than detection, the next step is wiring the flag to an automated PAM grant revocation, and that is a deliberate future decision, not an accident of the current build (ADR-005).</p>
+<h2 id="why-the-audit-ledger-is-append-only">Why the audit ledger is append-only<a class="headerlink" href="#why-the-audit-ledger-is-append-only" title="Permanent link">&para;</a></h2>
+<p><code>access_grants</code> never receives an <code>UPDATE</code>. Every lifecycle event (a request, a grant, a denial, an expiry flag) is a new row keyed by <code>request_id</code>. "Is this grant still active" is a query (a GRANT row with no matching EXPIRE row), not a status column someone could quietly edit after the fact. That property is what makes the ledger usable as SOX 404 ITGC evidence: the history can be appended to, not rewritten.</p>
 <p>Two independent layers back this up:</p>
 <ol>
-<li><strong>Application-level ledger</strong> (<code>access_grants</code>) — written directly by the function code, with the full business context (who, what, when, why, approved by whom).</li>
-<li><strong>Platform-level log export</strong> (<code>bankvault_platform_logs</code>) — a raw Cloud Logging export of both functions' execution logs, routed by a <code>google_logging_project_sink</code>. If the application code has a bug and skips a ledger write, the platform-level invocation record still exists, independently produced by GCP itself.</li>
+<li><strong>Application ledger</strong> (<code>access_grants</code>) written by the broker with full business context: who, what, when, why, approved by whom, the object path, the MFA <code>auth_time</code> that gated the grant.</li>
+<li><strong>Platform log export</strong> (<code>bankvault_platform_logs</code>), a Cloud Logging sink routing the broker's logs, the reconcile job's logs, and PAM admin-activity audit logs into BigQuery. If the application code has a bug and skips a ledger write, the platform-level record still exists, produced independently by GCP.</li>
 </ol>
-<p>See <a href="../controls-mapping/">Compliance Coverage</a> for how each piece maps to a specific PCI DSS, FFIEC, or SOX 404 control.</p>
+<p>See <a href="../controls-mapping/">Compliance coverage</a> for how each piece maps to a specific GLBA, PCI DSS, FFIEC, or SOX 404 control.</p>
+<h2 id="identity-plane">Identity plane<a class="headerlink" href="#identity-plane" title="Permanent link">&para;</a></h2>
+<p>Underwriters and approvers resolve through Workforce Identity Federation, not a second cloud-local directory. A leaver disabled in the corporate IdP loses BankVault eligibility with them, because there is no parallel Cloud Identity account to forget about. That decision, and the one directory it deliberately rules out, is ADR-002.</p>
+<p>The broker does not trust a session token merely because it is unexpired. It reads <code>auth_time</code> and requires a login fresh within <code>max_auth_age_seconds</code>. Access Context Manager reauthentication session controls are the defense-in-depth layer behind that broker check; the broker check is the one this repo implements. ADR-004 covers why freshness, not mere validity, is the signal that matters for a privileged read.</p>
+<h2 id="trust-boundaries">Trust boundaries<a class="headerlink" href="#trust-boundaries" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Boundary</th>
+<th>Who is trusted</th>
+<th>What is checked</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Underwriter → broker</td>
+<td>Nobody by default</td>
+<td>OIDC token shape + <code>auth_time</code> freshness, domain, SoD</td>
+</tr>
+<tr>
+<td>Broker → PAM</td>
+<td>Broker SA, narrowly</td>
+<td>SA may create grants only on the one entitlement</td>
+</tr>
+<tr>
+<td>PAM → bucket</td>
+<td>The conditioned grant</td>
+<td>IAM Condition: object prefix + time window</td>
+</tr>
+<tr>
+<td>Broker/reconcile → ledger</td>
+<td>Broker SA (write), reconcile SA (read)</td>
+<td>Reconcile cannot write access_grants except EXPIRE_FLAG rows</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-is-deliberately-out-of-scope-for-this-build">What is deliberately out of scope for this build<a class="headerlink" href="#what-is-deliberately-out-of-scope-for-this-build" title="Permanent link">&para;</a></h2>
+<p>These are next steps, not gaps hidden under the demo:</p>
+<ul>
+<li><strong>VPC Service Controls</strong> around the bucket and BigQuery, to stop exfiltration to a project outside the perimeter even with a valid grant.</li>
+<li><strong>CMEK</strong> on the bucket and datasets, so key custody is separable from data custody.</li>
+<li><strong>DLP content inspection</strong> on reads, to catch a credit report that lands in the wrong object prefix.</li>
+<li><strong>Automated containment</strong>: wiring the reconcile flag to a real PAM grant revocation (ADR-005 open question).</li>
+<li><strong>A real JWKS verification path</strong> in <code>verify_mfa_freshness</code>, replacing the claims-shape check with signature verification against the live IdP.</li>
+<li><strong>Alerting</strong>: routing the reconcile job's structured alert log to an on-call channel with a threshold.</li>
+</ul>
 
 
 
@@ -714,6 +915,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -744,10 +951,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

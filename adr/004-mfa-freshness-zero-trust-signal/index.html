@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Just-in-time privilege elevation for a mock retail bank's loan origination pipeline">
+        <meta name="description" content="Just-in-time privilege elevation for a mock mortgage lender, built on GCP Privileged Access Manager.">
       
       
       
@@ -14,22 +14,22 @@
         <link rel="prev" href="../003-scope-and-actor-definition/">
       
       
-        <link rel="next" href="../005-pam-grant-revocation-lifecycle/">
+        <link rel="next" href="../005-pam-grant-lifecycle/">
       
       
         
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>ADR-004: MFA Freshness as the Zero Trust Signal - BankVault</title>
+        <title>ADR-004: MFA freshness as the signal - BankVault</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -67,7 +67,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#adr-004-mfa-freshness-as-the-zero-trust-signal" class="md-skip">
+        <a href="#adr-004-mfa-freshness-as-the-signal-not-session-validity" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ADR-004: MFA Freshness as the Zero Trust Signal
+              ADR-004: MFA freshness as the signal
             
           </span>
         </div>
@@ -125,7 +125,21 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
     
   
 </form>
@@ -251,7 +265,7 @@
   <span class="md-ellipsis">
     
   
-    Home
+    Overview
   
 
     
@@ -295,6 +309,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../../controls-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -313,17 +354,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
   <span class="md-ellipsis">
     
   
-    Architecture Decisions
+    Decision records
   
 
     
@@ -334,12 +375,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Architecture Decisions
+    Decision records
   
 
           </label>
@@ -352,14 +393,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../001-build-vs-buy-jit-access/" class="md-nav__link">
+      <a href="../001-build-vs-buy-jit-broker/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    ADR-001: Build vs. Buy
+    ADR-001: Build vs. Buy, reversed
   
 
     
@@ -387,7 +428,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-002: Workforce Identity Federation vs. IAP
+    ADR-002: Two directories is one too many
   
 
     
@@ -415,7 +456,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-003: Scope and Actor Definition
+    ADR-003: Scope and actor definition
   
 
     
@@ -452,7 +493,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-004: MFA Freshness as the Zero Trust Signal
+    ADR-004: MFA freshness as the signal
   
 
     
@@ -470,7 +511,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-004: MFA Freshness as the Zero Trust Signal
+    ADR-004: MFA freshness as the signal
   
 
     
@@ -515,105 +556,27 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Decision">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#idp-unavailability-fail-closed" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale-including-where-the-check-runs-and-why" class="md-nav__link">
     <span class="md-ellipsis">
       
-        IdP unavailability: fail closed
+        Rationale, including where the check runs and why
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#circuit-breaker" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Circuit breaker
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#trade-offs-accepted" class="md-nav__link">
+  <a href="#the-cost-taken-knowingly" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Trade-offs Accepted
+        The cost, taken knowingly
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Trade-offs Accepted">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-bankvaults-availability-is-bounded-by-the-idps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. BankVault's availability is bounded by the IdP's
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-the-15-minute-auth_time-window-is-a-policy-choice-not-an-empirical-one" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. The 15-minute auth_time window is a policy choice, not an empirical one
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-max_age0-enforcement-depends-on-correct-client-tool-implementation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. max_age=0 enforcement depends on correct client-tool implementation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-circuit-breaker-thresholds-are-untuned" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Circuit-breaker thresholds are untuned
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-freshness-gates-the-grant-request-not-the-access-window" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Freshness gates the grant request, not the access window
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -626,74 +589,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Consequences">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#positive" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Positive
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#negative" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Negative
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
   <a href="#alternatives-considered" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alternatives Considered
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rationale
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assumptions-requiring-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Assumptions Requiring Verification
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Related
+        Alternatives considered
       
     </span>
   </a>
@@ -716,14 +618,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../005-pam-grant-revocation-lifecycle/" class="md-nav__link">
+      <a href="../005-pam-grant-lifecycle/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    ADR-005: PAM Grant/Revocation Lifecycle
+    ADR-005: Grant lifecycle, detect not contain
   
 
     
@@ -740,33 +642,6 @@
           </ul>
         </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../controls-mapping/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Compliance Coverage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -817,105 +692,27 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Decision">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#idp-unavailability-fail-closed" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale-including-where-the-check-runs-and-why" class="md-nav__link">
     <span class="md-ellipsis">
       
-        IdP unavailability: fail closed
+        Rationale, including where the check runs and why
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#circuit-breaker" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Circuit breaker
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#trade-offs-accepted" class="md-nav__link">
+  <a href="#the-cost-taken-knowingly" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Trade-offs Accepted
+        The cost, taken knowingly
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Trade-offs Accepted">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-bankvaults-availability-is-bounded-by-the-idps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. BankVault's availability is bounded by the IdP's
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-the-15-minute-auth_time-window-is-a-policy-choice-not-an-empirical-one" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. The 15-minute auth_time window is a policy choice, not an empirical one
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-max_age0-enforcement-depends-on-correct-client-tool-implementation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. max_age=0 enforcement depends on correct client-tool implementation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-circuit-breaker-thresholds-are-untuned" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Circuit-breaker thresholds are untuned
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-freshness-gates-the-grant-request-not-the-access-window" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Freshness gates the grant request, not the access window
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -928,74 +725,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Consequences">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#positive" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Positive
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#negative" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Negative
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
   <a href="#alternatives-considered" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alternatives Considered
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rationale
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assumptions-requiring-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Assumptions Requiring Verification
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Related
+        Alternatives considered
       
     </span>
   </a>
@@ -1022,119 +758,44 @@
   
 
 
-<h1 id="adr-004-mfa-freshness-as-the-zero-trust-signal">ADR-004: MFA Freshness as the Zero Trust Signal<a class="headerlink" href="#adr-004-mfa-freshness-as-the-zero-trust-signal" title="Permanent link">&para;</a></h1>
-<p><strong>Date:</strong> 2026-07-03
-<strong>Status:</strong> Accepted
-<strong>Authors:</strong> Lanre Oluokun
-<strong>Implementation:</strong> <code>main.py</code> — freshness check implemented; identity-validation stub not yet replaced (see ADR-005 Known Gaps)</p>
-<hr />
+<h1 id="adr-004-mfa-freshness-as-the-signal-not-session-validity">ADR-004: MFA freshness as the signal, not session validity<a class="headerlink" href="#adr-004-mfa-freshness-as-the-signal-not-session-validity" title="Permanent link">&para;</a></h1>
+<ul>
+<li><strong>Status:</strong> Accepted</li>
+<li><strong>Date:</strong> 2026-07-11</li>
+<li><strong>Deciders:</strong> Lanre</li>
+<li><strong>Related:</strong> ADR-002, ADR-005</li>
+</ul>
 <h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
-<p>BankVault must enforce Zero Trust at the point of JIT grant. Identity alone (assigned underwriter + valid loan application) is insufficient. The broker must verify trust of the <em>specific session</em>, not just authorization of the user.</p>
-<p>The distinction matters because every other control in this system assumes the session presenting the request is the session the underwriter actually holds. Without a freshness signal, a stolen or replayed session token satisfies every downstream check — the entitlement is valid, the CEL condition matches, the audit log records a legitimate-looking grant. Authorization succeeds and the control set produces no signal that anything is wrong.</p>
-<hr />
+<p>An underwriter requests a credit report. Their corporate session is valid: they logged in this morning, the token has not expired. Is a valid session enough to gate a privileged read of consumer financial data?</p>
+<p>A valid session says "this person authenticated at some point in the allowed window." It does not say "this person is at the keyboard right now." Between the morning login and this afternoon's request sits a laptop left unlocked, a hijacked session, a token lifted from a compromised host. For a normal read, session validity is a reasonable bar. For a privileged read of a credit report, the more useful signal is <em>recency</em>: did this person prove who they are within the last few minutes.</p>
 <h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
-<p><strong>MFA freshness check via a <code>max_age=0</code> OIDC constraint.</strong></p>
-<p>The underwriter-facing tool must explicitly request <code>max_age=0</code> at the point of the JIT request. Forwarding an existing session token instead of forcing re-authentication would make this check a no-op.</p>
-<p>The broker validates the returned ID token's <code>auth_time</code> claim against a <strong>15-minute window</strong>. Hard deny if stale or missing. The check runs on every JIT request. <strong>No session caching.</strong></p>
-<h3 id="idp-unavailability-fail-closed">IdP unavailability: fail closed<a class="headerlink" href="#idp-unavailability-fail-closed" title="Permanent link">&para;</a></h3>
-<p>If the identity provider is unreachable, returns an error, or times out, <strong>the broker denies the JIT request</strong>. There is no fallback path, no cached-<code>auth_time</code> acceptance, and no degraded mode.</p>
-<p>A grant issued without a verifiable fresh authentication event is a grant issued without the Zero Trust signal this ADR exists to establish. The correct behavior on loss of that signal is denial, not assumption.</p>
-<h3 id="circuit-breaker">Circuit breaker<a class="headerlink" href="#circuit-breaker" title="Permanent link">&para;</a></h3>
-<p>Rather than retrying a failing IdP on every request, the broker <strong>opens a circuit after 3 consecutive IdP failures</strong> and denies immediately for a <strong>60-second cooldown</strong> without issuing further calls, then allows a single probe request through. This bounds retry amplification against an IdP that is already degraded.</p>
-<p>Denials during an open circuit are logged distinctly as <code>IDP_UNAVAILABLE</code>, separate from <code>MFA_STALE</code>, so that an availability incident is not misread in the audit trail as a stream of failed authentication attempts. Conflating the two would make an outage indistinguishable from an attack in post-incident review — which is precisely the moment the distinction matters most.</p>
-<hr />
-<h2 id="trade-offs-accepted">Trade-offs Accepted<a class="headerlink" href="#trade-offs-accepted" title="Permanent link">&para;</a></h2>
-<p>Each of the following is a known cost of the decision above, not an unresolved question. They are stated so that a reader does not have to discover them.</p>
-<h3 id="1-bankvaults-availability-is-bounded-by-the-idps">1. BankVault's availability is bounded by the IdP's<a class="headerlink" href="#1-bankvaults-availability-is-bounded-by-the-idps" title="Permanent link">&para;</a></h3>
-<p><strong>The cost.</strong> Fail-closed means an IdP outage blocks <em>all</em> JIT grants. Underwriters cannot obtain access to credit reports while the bank's IdP is down. A loan decision with an SLA does not stop having an SLA because Okta is having a bad afternoon.</p>
-<p><strong>Why it is accepted anyway.</strong> The alternative is granting access to GLBA-regulated NPI on the basis of an unverified session. That inverts the control: a system designed to deny access without fresh trust would, under precisely the conditions most favorable to an attacker (identity infrastructure degraded, monitoring noisy, operators distracted), begin granting it. Fail-open on an identity control is not a graceful degradation; it is a control that switches itself off under stress.</p>
-<p><strong>What this obligates.</strong> The bank's incident response plan must include a documented, audited, manually-approved break-glass path <em>outside this broker</em> for the case where a loan decision cannot wait out the outage. <strong>That path is out of scope for this ADR and is not built.</strong> Naming it here is not the same as having it. A production deployment cannot ship this decision without also shipping that path.</p>
-<h3 id="2-the-15-minute-auth_time-window-is-a-policy-choice-not-an-empirical-one">2. The 15-minute <code>auth_time</code> window is a policy choice, not an empirical one<a class="headerlink" href="#2-the-15-minute-auth_time-window-is-a-policy-choice-not-an-empirical-one" title="Permanent link">&para;</a></h3>
-<p><strong>The cost.</strong> Fifteen minutes is defensible but arbitrary. A shorter window forces re-authentication friction on underwriters mid-workflow; a longer one widens the replay window a stolen token can exploit. No measurement in this project justifies 15 over 10 or 20.</p>
-<p><strong>Why it is accepted anyway.</strong> The alternative to an unvalidated number is either no window at all (which defeats the control) or a fabricated justification for a specific figure (which is worse than admitting the figure is a policy choice). It is documented as risk-based policy, and a real deployment would set it from the underwriter's actual task duration and the IdP's observed session behavior.</p>
-<h3 id="3-max_age0-enforcement-depends-on-correct-client-tool-implementation">3. <code>max_age=0</code> enforcement depends on correct client-tool implementation<a class="headerlink" href="#3-max_age0-enforcement-depends-on-correct-client-tool-implementation" title="Permanent link">&para;</a></h3>
-<p><strong>The cost.</strong> The broker validates <code>auth_time</code>, but it cannot force the client to have <em>requested</em> re-authentication. A client tool that forwards an existing session token and receives an <code>auth_time</code> that happens to fall within the window will pass this check without a fresh MFA event ever occurring. The control has a dependency on code the broker does not own.</p>
-<p><strong>Why it is accepted anyway.</strong> There is no server-side signal that distinguishes "the IdP re-authenticated this user 3 minutes ago because we asked" from "the IdP re-authenticated this user 3 minutes ago for an unrelated reason." OIDC does not expose one. The mitigation is not architectural — it is a client-integration requirement that must be verified during onboarding of the underwriter-facing tool, and re-verified whenever that tool changes. This is a stated assumption below, not a solved problem.</p>
-<h3 id="4-circuit-breaker-thresholds-are-untuned">4. Circuit-breaker thresholds are untuned<a class="headerlink" href="#4-circuit-breaker-thresholds-are-untuned" title="Permanent link">&para;</a></h3>
-<p><strong>The cost.</strong> Three failures and a 60-second cooldown are placeholder values. Too sensitive and a transient network blip locks out underwriters for a minute; too tolerant and the broker hammers a degraded IdP.</p>
-<p><strong>Why it is accepted anyway.</strong> The threshold values are far less important than the <em>presence</em> of the breaker — the failure mode being prevented (unbounded retry against a degraded IdP) is prevented at any reasonable threshold. Tuning requires the IdP's own SLO and observed error-rate distribution, which are bank-specific and not available at portfolio scope.</p>
-<h3 id="5-freshness-gates-the-grant-request-not-the-access-window">5. Freshness gates the grant request, not the access window<a class="headerlink" href="#5-freshness-gates-the-grant-request-not-the-access-window" title="Permanent link">&para;</a></h3>
-<p><strong>The cost.</strong> This ADR establishes trust at the moment of grant issuance. It does not re-check freshness during the 30-minute window that ADR-005 opens. A session compromised <em>after</em> a valid grant is active inherits that access for the remainder of the window.</p>
-<p><strong>Why it is accepted anyway.</strong> Closing this would require session-bound revocation, which depends on OIDC back-channel logout support from the bank's IdP — unverified as available. ADR-005 records that as <strong>Deferred</strong>, not rejected, with an explicit revisit condition. The boundary between "freshness at request" and "freshness during window" is stated in both ADRs rather than left for a reader to infer.</p>
-<hr />
-<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
-<h3 id="positive">Positive<a class="headerlink" href="#positive" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Defensible Zero Trust signal, <strong>request-scoped rather than session-scoped</strong>.</li>
-<li><strong>Fails safe</strong> — deny by default, including when the identity plane itself is unavailable.</li>
-<li>Audit log distinguishes <code>MFA_STALE</code> (a stale or missing <code>auth_time</code>) from <code>IDP_UNAVAILABLE</code> (an outage), so authentication failures and availability failures are not conflated in incident review.</li>
-<li>Circuit breaker bounds retry amplification against a degraded IdP, so BankVault does not contribute to the outage it is reacting to.</li>
-</ul>
-<h3 id="negative">Negative<a class="headerlink" href="#negative" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Availability coupling.</strong> Fail-closed on IdP unavailability means BankVault's availability is bounded by the IdP's. An IdP outage blocks all JIT grants, and the manually-approved break-glass path this implies is <strong>not built</strong>.</li>
-<li><strong>The 15-minute window is unvalidated policy.</strong> Documented as a risk-based choice, not presented as an empirically optimized figure.</li>
-<li><strong>Client-side dependency.</strong> <code>max_age=0</code> enforcement depends on the underwriter-facing tool implementing it correctly. The broker cannot detect a client that forwards a stale session whose <code>auth_time</code> happens to fall inside the window.</li>
-<li><strong>Circuit-breaker thresholds untuned</strong> against real IdP behavior.</li>
-<li><strong>No in-window re-check.</strong> Freshness gates issuance only; ADR-005's 30-minute window runs without further freshness validation.</li>
-</ul>
-<hr />
-<h2 id="alternatives-considered">Alternatives Considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Alternative</th>
-<th>Pros</th>
-<th>Cons</th>
-<th>Verdict</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Device compliance posture</strong> (BeyondCorp / agent-based)</td>
-<td>Stronger Zero Trust signal — covers device health <em>and</em> identity, and would partially close the stolen-session gap this ADR leaves open</td>
-<td>Cannot currently defend the GCP implementation mechanism without fabricating integration details</td>
-<td><strong>Rejected</strong></td>
-</tr>
-<tr>
-<td><strong>Static session token validation</strong> (no re-auth force)</td>
-<td>Simpler client integration, no IdP re-auth latency, no availability coupling</td>
-<td>Validates a <em>standing</em> session, not <em>fresh</em> trust — which is the thing Zero Trust exists to distinguish</td>
-<td><strong>Rejected</strong></td>
-</tr>
-<tr>
-<td><strong>Risk-based scoring</strong> (anomaly detection, geo-IP)</td>
-<td>More sophisticated trust signal; degrades gracefully rather than failing closed</td>
-<td>Requires data and models not available; over-engineered for this scope</td>
-<td><strong>Rejected</strong></td>
-</tr>
-<tr>
-<td><strong>Fail open on IdP unavailability</strong> (cache last-known-good <code>auth_time</code>)</td>
-<td>Preserves BankVault availability during an IdP outage; no break-glass path needed</td>
-<td>The control switches itself off under exactly the conditions most favorable to an attacker. An identity control that fails open is not a control</td>
-<td><strong>Rejected</strong></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="rationale">Rationale<a class="headerlink" href="#rationale" title="Permanent link">&para;</a></h2>
-<p>MFA freshness is the Zero Trust signal that can be drawn, defended, and implemented honestly in the available time. Device posture is the architecturally stronger answer, but the GCP integration details for it aren't known well enough to defend without fabricating them. <strong>A narrow, defensible mechanism beats a broad, hand-waved one.</strong></p>
-<p>The fail-closed decision follows from the same principle. A system whose availability depends on its identity provider is an honest, statable architecture with a known operational cost. A system that grants access to NPI when it cannot verify who is asking is not a weaker version of the same architecture — it is a different architecture, one whose primary control has a documented bypass.</p>
-<hr />
-<h2 id="assumptions-requiring-verification">Assumptions Requiring Verification<a class="headerlink" href="#assumptions-requiring-verification" title="Permanent link">&para;</a></h2>
+<p>The broker gates each grant on <strong>MFA freshness</strong>, not session validity. It reads the OIDC token's <code>auth_time</code> claim and refuses to create a PAM grant if <code>now - auth_time</code> exceeds <code>max_auth_age_seconds</code> (default 300, five minutes). A stale login is denied with a reason, and the underwriter must re-authenticate before the request will pass.</p>
+<p>This check runs in <code>request_broker</code> (<code>verify_mfa_freshness</code>), before any PAM call. It is a broker-side check against the identity provider's token.</p>
+<h2 id="rationale-including-where-the-check-runs-and-why">Rationale, including where the check runs and why<a class="headerlink" href="#rationale-including-where-the-check-runs-and-why" title="Permanent link">&para;</a></h2>
+<p>The important and easily-fabricated detail: <strong>GCP IAM has no "how recently did this principal complete MFA" condition attribute.</strong> IAM Conditions support request-time, resource, and similar attributes; they do not expose authentication recency. So freshness cannot be a CEL clause on the entitlement the way the object-scope and time-window clauses are. It has to be enforced at a layer that can see the authentication event.</p>
+<p>There are two such layers, and this repo uses the first:</p>
 <ol>
-<li>The underwriter-facing tool correctly implements <code>max_age=0</code> on <strong>every</strong> JIT request. Not verifiable server-side; must be confirmed at client-tool onboarding and re-confirmed on every client change.</li>
-<li>The IdP returns the <code>auth_time</code> claim in the ID token. Standard OIDC, but bank IdP configurations vary and some suppress it.</li>
-<li>The 15-minute window is documented as risk-based policy, <strong>not</strong> presented as an empirically optimized figure.</li>
-<li>The circuit-breaker thresholds (3 failures, 60-second cooldown) are not tuned against observed IdP behavior. A real deployment would set them from the IdP's own SLO and error-rate distribution.</li>
-<li>A manually-approved, audited break-glass path exists outside this broker for IdP-outage scenarios. <strong>Assumed by this decision; not built by this project.</strong></li>
+<li><strong>Broker check (implemented here).</strong> The broker receives the IdP-issued OIDC token, reads <code>auth_time</code>, and enforces the freshness bound itself before requesting the grant. This is explicit, testable with a mocked token, and lives in the code path that already exists to enforce segregation of duties.</li>
+<li><strong>Access Context Manager reauthentication session controls (defense-in-depth, not implemented here).</strong> ACM can require reauthentication after a configured interval for access to protected resources. That is the platform-level backstop behind the broker check. It is named here as the intended second layer, not wired up in this build.</li>
 </ol>
-<hr />
-<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
+<p>Enforcing freshness at the broker, in front of PAM, means a stale login never becomes a grant in the first place. The ledger records the <code>auth_time</code> that gated each grant, so the freshness decision is auditable after the fact, not just enforced in the moment.</p>
+<h2 id="the-cost-taken-knowingly">The cost, taken knowingly<a class="headerlink" href="#the-cost-taken-knowingly" title="Permanent link">&para;</a></h2>
+<p>Access is denied when the identity provider is unreachable, because the broker cannot confirm freshness without it. That means BankVault's availability is bounded by the IdP's. A loan decision with an SLA does not stop having one because Okta is down.</p>
+<p>I took that trade deliberately. An identity control that keeps granting access when it cannot verify who is asking has a bypass, and the bypass opens under exactly the conditions an attacker wants: the IdP degraded, checks failing open, nobody watching. Fail-closed is the correct default for a privileged read of regulated data, and the availability cost is the price of not having a fail-open bypass. If a specific SLA cannot tolerate that, the answer is a documented, alerted break-glass path, not a control that quietly fails open.</p>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<p><strong>Positive</strong>
+- The signal that gates access is presence, not a possibly-stale session.
+- The gating <code>auth_time</code> is recorded per grant, so freshness is auditable, not just enforced.
+- Fail-closed by default; no silent fail-open bypass under IdP degradation.</p>
+<p><strong>Negative</strong>
+- Availability is coupled to the IdP (consistent with ADR-002, but real).
+- Five minutes is a chosen number. Too short and underwriters re-authenticate constantly; too long and "fresh" stops meaning present. It is a tunable (<code>max_auth_age_seconds</code>), not a proven value.
+- This repo validates the token's claims shape and <code>auth_time</code>; it does not perform full signature verification against the live IdP JWKS. That is a stub boundary, called out in the README, not a finished auth path.</p>
+<h2 id="alternatives-considered">Alternatives considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../001-build-vs-buy-jit-access/">ADR-001: Build vs. Buy — Custom JIT Broker vs. Off-the-Shelf PAM</a></li>
-<li><a href="../003-scope-and-actor-definition/">ADR-003: Scope and Actor Definition</a> — fixes the actor and the GLBA basis</li>
-<li><a href="../005-pam-grant-revocation-lifecycle/">ADR-005: PAM Grant/Revocation Lifecycle</a> — consumes this check; opens the 30-minute window this ADR does not re-validate</li>
+<li><strong>Session validity only.</strong> Rejected. It is the weaker signal and the whole point of the control is to be stronger than the default.</li>
+<li><strong>A CEL "MFA freshness" condition on the entitlement.</strong> Rejected because it does not exist. IAM Conditions have no authentication-recency attribute; asserting one would be a fabricated capability.</li>
+<li><strong>ACM reauthentication alone, no broker check.</strong> Deferred, not rejected. It is the right defense-in-depth layer, but leaving freshness entirely to a platform setting removes the per-grant <code>auth_time</code> record that makes the decision auditable.</li>
 </ul>
 
 
@@ -1155,6 +816,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -1185,10 +852,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

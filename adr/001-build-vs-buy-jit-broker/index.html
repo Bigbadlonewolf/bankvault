@@ -6,30 +6,30 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Just-in-time privilege elevation for a mock retail bank's loan origination pipeline">
+        <meta name="description" content="Just-in-time privilege elevation for a mock mortgage lender, built on GCP Privileged Access Manager.">
       
       
       
       
-        <link rel="prev" href="../004-mfa-freshness-zero-trust-signal/">
+        <link rel="prev" href="../../controls-mapping/">
       
       
-        <link rel="next" href="../../controls-mapping/">
+        <link rel="next" href="../002-workforce-identity-federation-vs-iap/">
       
       
         
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>ADR-005: PAM Grant/Revocation Lifecycle - BankVault</title>
+        <title>ADR-001: Build vs. Buy, reversed - BankVault</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -67,7 +67,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#adr-005-pam-grantrevocation-lifecycle" class="md-skip">
+        <a href="#adr-001-build-vs-buy-and-the-week-i-reversed-it" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ADR-005: PAM Grant/Revocation Lifecycle
+              ADR-001: Build vs. Buy, reversed
             
           </span>
         </div>
@@ -125,7 +125,21 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
     
   
 </form>
@@ -251,7 +265,7 @@
   <span class="md-ellipsis">
     
   
-    Home
+    Overview
   
 
     
@@ -295,6 +309,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../../controls-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -313,17 +354,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
   <span class="md-ellipsis">
     
   
-    Architecture Decisions
+    Decision records
   
 
     
@@ -334,128 +375,16 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Architecture Decisions
+    Decision records
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../001-build-vs-buy-jit-access/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ADR-001: Build vs. Buy
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../002-workforce-identity-federation-vs-iap/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ADR-002: Workforce Identity Federation vs. IAP
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../003-scope-and-actor-definition/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ADR-003: Scope and Actor Definition
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../004-mfa-freshness-zero-trust-signal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ADR-004: MFA Freshness as the Zero Trust Signal
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -480,7 +409,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-005: PAM Grant/Revocation Lifecycle
+    ADR-001: Build vs. Buy, reversed
   
 
     
@@ -498,7 +427,7 @@
   <span class="md-ellipsis">
     
   
-    ADR-005: PAM Grant/Revocation Lifecycle
+    ADR-001: Build vs. Buy, reversed
   
 
     
@@ -535,10 +464,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#decision" class="md-nav__link">
+  <a href="#decision-original" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Decision
+        Decision (original)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale-original" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rationale (original)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reversal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversal
       
     </span>
   </a>
@@ -560,62 +511,7 @@
   <a href="#alternatives-considered" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alternatives Considered
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rationale
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#monitoring" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Monitoring
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#residual-risk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Residual Risk
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#known-gaps-implementation-not-architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Known Gaps (Implementation, Not Architecture)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites-assumptions-requiring-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prerequisites / Assumptions Requiring Verification
+        Alternatives considered
       
     </span>
   </a>
@@ -631,28 +527,21 @@
 
               
             
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
+              
+                
   
   
   
   
     <li class="md-nav__item">
-      <a href="../../controls-mapping/" class="md-nav__link">
+      <a href="../002-workforce-identity-federation-vs-iap/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Compliance Coverage
+    ADR-002: Two directories is one too many
   
 
     
@@ -661,6 +550,98 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../003-scope-and-actor-definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-003: Scope and actor definition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../004-mfa-freshness-zero-trust-signal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-004: MFA freshness as the signal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../005-pam-grant-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-005: Grant lifecycle, detect not contain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -703,10 +684,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#decision" class="md-nav__link">
+  <a href="#decision-original" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Decision
+        Decision (original)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale-original" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rationale (original)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reversal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversal
       
     </span>
   </a>
@@ -728,62 +731,7 @@
   <a href="#alternatives-considered" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alternatives Considered
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rationale
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#monitoring" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Monitoring
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#residual-risk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Residual Risk
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#known-gaps-implementation-not-architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Known Gaps (Implementation, Not Architecture)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites-assumptions-requiring-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prerequisites / Assumptions Requiring Verification
+        Alternatives considered
       
     </span>
   </a>
@@ -810,70 +758,47 @@
   
 
 
-<h1 id="adr-005-pam-grantrevocation-lifecycle">ADR-005: PAM Grant/Revocation Lifecycle<a class="headerlink" href="#adr-005-pam-grantrevocation-lifecycle" title="Permanent link">&para;</a></h1>
-<p><strong>Date</strong>: 2026-07-08
-<strong>Status</strong>: Accepted
-<strong>Authors</strong>: Lanre Oluokun
-<strong>Implementation</strong>: In progress (<code>main.py</code> identity validation stubbed, reconciliation job and key-creation org policy not yet built)</p>
-<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
-<p>This lifecycle governs how long a loan underwriter's access to GLBA-regulated NPI in Cloud Storage lasts once ADR-004's freshness check has already passed. ADR-003 fixed actor/scope; ADR-004 gates the grant <em>request</em> on a fresh MFA event. This ADR does not re-check freshness during the access window. That boundary is stated explicitly, not assumed.</p>
-<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
-<p>GCP Privileged Access Manager (GA) issues the grant via a project-level entitlement, <code>maxRequestDuration = 1800s</code> (30 minutes). The role binding carries a static IAM Condition scoping access to the one credit-report object from ADR-003, evaluated on every access attempt for the life of the grant. The broker's dedicated service account (sole eligible requester on this entitlement, no exportable keys once org policy is applied) calls PAM's grant API after the ADR-004 check passes.</p>
-<pre><code>resource.type == &quot;storage.googleapis.com/Object&quot; &amp;&amp;
-resource.name == &quot;projects/_/buckets/{BANKVAULT_NPI_BUCKET}/objects/{CREDIT_REPORT_OBJECT}&quot;
-</code></pre>
-<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
-<p><strong>Positive:</strong> GA lifecycle enforcement. Continuous per-access resource-path check. Broker and monitoring identities kept separate, bounding blast radius on either side.</p>
-<p><strong>Negative:</strong> MFA freshness gates grant issuance only, not the full 30-minute window. A session compromised after a valid grant is active inherits that access with no further freshness re-check for the remaining window. Static CEL doesn't generalize past one actor/object without rearchitecting. PAM's own behavior on a missed auto-expiry is undocumented.</p>
-<h2 id="alternatives-considered">Alternatives Considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Alternative</th>
-<th>Pros</th>
-<th>Cons</th>
-<th>Verdict</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Custom IAM Conditions + Cloud Function grant/revoke layer</td>
-<td>Full control over revocation triggers</td>
-<td>Reimplements a GA lifecycle GCP already manages</td>
-<td>Rejected</td>
-</tr>
-<tr>
-<td>Session-bound revocation</td>
-<td>Tighter security window</td>
-<td>Requires OIDC back-channel logout support from the IdP, unverified as available</td>
-<td>Deferred, revisit once back-channel logout capability is confirmed</td>
-</tr>
-<tr>
-<td>Standing access, manual revocation</td>
-<td>Simplest to build</td>
-<td>Defeats the JIT/Zero Trust premise</td>
-<td>Rejected</td>
-</tr>
-</tbody>
-</table>
-<h2 id="rationale">Rationale<a class="headerlink" href="#rationale" title="Permanent link">&para;</a></h2>
-<p>PAM automates the specific, repeated judgment the Safeguards Rule requires (reconsidering legitimate business need for access) by re-deciding it per request rather than on a periodic manual cycle. This supports one control within a Safeguards Rule program; it is not compliance on its own.</p>
-<h2 id="monitoring">Monitoring<a class="headerlink" href="#monitoring" title="Permanent link">&para;</a></h2>
-<p>A separate service account, holding only <code>roles/privilegedaccessmanager.viewer</code> on this entitlement, runs a Cloud Scheduler job every 15 minutes invoking a Cloud Function that lists active grants and compares each against the <code>expireTime</code> PAM itself returns for that grant. Overruns are logged to Cloud Logging. Detective only: <strong>the job flags, it does not revoke.</strong></p>
-<h2 id="residual-risk">Residual Risk<a class="headerlink" href="#residual-risk" title="Permanent link">&para;</a></h2>
-<p>This is a detection bound, not an exposure bound. If PAM's expiry silently fails, the overrun is flagged within ~15 minutes, but access remains active until a person acts on that log entry. There is no automatic revoke. The honest claim is "detected within ~45 minutes" (30-minute grant + up to 15-minute detection lag), not "contained within ~45 minutes." Acceptable for portfolio scope, since PAM's expiry is expected to work and this is a backstop for an undocumented failure mode rather than a primary control. Would need tightening before any real deployment.</p>
-<h2 id="known-gaps-implementation-not-architecture">Known Gaps (Implementation, Not Architecture)<a class="headerlink" href="#known-gaps-implementation-not-architecture" title="Permanent link">&para;</a></h2>
+<h1 id="adr-001-build-vs-buy-and-the-week-i-reversed-it">ADR-001: Build vs. Buy, and the week I reversed it<a class="headerlink" href="#adr-001-build-vs-buy-and-the-week-i-reversed-it" title="Permanent link">&para;</a></h1>
 <ul>
-<li><code>main.py</code> identity-validation stub not implemented.</li>
-<li>Reconciliation job, its dedicated service account, and any automatic-revoke action not yet built.</li>
-<li><code>iam.disableServiceAccountKeyCreation</code> org policy not yet applied or confirmed.</li>
+<li><strong>Status:</strong> Accepted, then partially reversed (see Reversal). Current: Buy the grant lifecycle (GCP PAM), build only the MFA-freshness gate.</li>
+<li><strong>Date:</strong> 2026-07-08 (original), 2026-07-14 (reversal recorded)</li>
+<li><strong>Deciders:</strong> Lanre</li>
+<li><strong>Supersedes:</strong> none</li>
+<li><strong>Related:</strong> ADR-004, ADR-005</li>
 </ul>
-<h2 id="prerequisites-assumptions-requiring-verification">Prerequisites / Assumptions Requiring Verification<a class="headerlink" href="#prerequisites-assumptions-requiring-verification" title="Permanent link">&para;</a></h2>
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>BankVault needs to grant an underwriter time-bound, object-scoped read access to a credit report and take it away when the window closes. When this project started, three ways to get that existed:</p>
+<ol>
+<li>A custom broker: our own code applies a conditional IAM binding, and a scheduled job strips it.</li>
+<li>An off-the-shelf enterprise PAM product (CyberArk, BeyondTrust, Delinea).</li>
+<li>A cloud-native managed service, if one existed that could grant a <em>resource-scoped, conditioned</em> IAM role for a bounded time.</li>
+</ol>
+<p>At the start, option 3 was not a safe bet. Google Privileged Access Manager existed but the resource-scoping and IAM-Condition support I needed were not something I was ready to build a project's core on. So the original decision was option 1: build the broker.</p>
+<h2 id="decision-original">Decision (original)<a class="headerlink" href="#decision-original" title="Permanent link">&para;</a></h2>
+<p>Build a custom JIT broker: <code>grant_access</code> applies a conditional <code>roles/storage.objectViewer</code> binding with a CEL expiry, <code>revoke_access</code> runs on a schedule to remove expired bindings. Explicitly reject enterprise PAM (option 2).</p>
+<p>The original ADR named the condition under which this decision would become wrong, in one sentence: <em>if GCP ships a managed grant lifecycle that supports resource-scoped, IAM-conditioned, time-bound grants with an approval workflow, the custom build loses its only advantage and should be retired.</em></p>
+<h2 id="rationale-original">Rationale (original)<a class="headerlink" href="#rationale-original" title="Permanent link">&para;</a></h2>
+<p>Enterprise PAM (option 2) is built for a different problem: brokering SSH/RDP/database sessions to servers, with credential vaulting and session recording. Pointing it at a single GCS object's IAM policy is using a session broker as an IAM-policy editor. It carries per-seat licensing, an agent footprint, and its own directory to keep in sync (the exact second-directory problem ADR-002 rejects). For a resource-scoped cloud IAM grant, it is the wrong mechanism at the wrong price.</p>
+<p>Between build and the immature managed option, build won because it kept the enforcement semantics legible: the CEL condition and the revocation logic were both in this repo, both testable with mocked clients, both reviewable in a diff.</p>
+<h2 id="reversal">Reversal<a class="headerlink" href="#reversal" title="Permanent link">&para;</a></h2>
+<p>One week later, the trigger condition fired. GCP Privileged Access Manager reached the maturity the original ADR was waiting on: time-bound grants, an approval workflow, a max-duration cap, and IAM-Condition support on the granted role, scoped to a project, folder, or organization, with all allow-policy condition attributes available on the entitlement.</p>
+<p>That is exactly the managed grant lifecycle the original ADR said would make the custom build wrong. The IAM Condition I was applying by hand, PAM now applies. The revocation <code>revoke_access</code> performed on a schedule, PAM now performs itself on grant expiry.</p>
+<p>So I deleted <code>revoke_access</code> rather than defend it. Its only remaining justification was that it already existed, and "we already wrote it" is not an architecture reason. The broker shrank to the one job PAM does not do: refusing to create a grant when the underwriter's login is not fresh (ADR-004).</p>
+<p><strong>Verify before you rely on this:</strong> PAM's IAM-Condition support and resource scoping are confirmed against Google's PAM and IAM-Conditions documentation as of July 2026. The exact grant-request API semantics (who the grantee is when a broker service account calls <code>grants.create</code> on behalf of a requester, and whether justification and a per-request condition can be supplied at request time or must be fixed on the entitlement) must be confirmed against the current PAM API before deployment. This repo fixes the condition on the entitlement, which is the safer assumption.</p>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<p><strong>Positive</strong>
+- Less code to own. The revocation path, its scheduler, and its failure modes are Google's problem now, not this repo's.
+- Approval workflow, grant history, and expiry are managed features with their own audit logs, feeding the platform-log layer for free.
+- The reversal itself is the project's strongest evidence: the decision was written so its own expiry was legible before it happened.</p>
+<p><strong>Negative</strong>
+- BankVault now depends on a PAM feature set. If Google changes the entitlement or condition model, this design moves with it.
+- The provider resource (<code>google_privileged_access_manager_entitlement</code>) must be present and stable in the pinned Terraform provider version. That is a new external dependency to track.
+- "Buy" here means depending on a first-party managed service, which is lower-risk than a third-party PAM vendor but is still not "build."</p>
+<h2 id="alternatives-considered">Alternatives considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Target GCS bucket has uniform bucket-level access enabled (required for the IAM Condition to apply).</li>
-<li>Exact-match CEL syntax on a full object path, inside a PAM entitlement condition specifically, is a standard CEL pattern but unconfirmed against a worked GCP example. Treat as likely, not verified.</li>
-<li>Cloud Logging write occurs synchronously with grant activation/expiry.</li>
-<li>OIDC back-channel logout availability on the identity provider (Google Identity / workforce identity federation), unverified.</li>
+<li><strong>Keep the custom broker anyway.</strong> Rejected. Maintaining a revocation path that duplicates a managed one is pure liability: two code paths that can disagree, and only one of them is Google's problem to keep working.</li>
+<li><strong>Enterprise PAM (option 2).</strong> Rejected at both decision points. Wrong mechanism (session broker used as IAM editor), wrong cost model, and it reintroduces a second directory.</li>
+<li><strong>Do nothing, use standing IAM with quarterly review.</strong> Rejected. That is the exact control gap the project exists to close (ADR-003).</li>
 </ul>
 
 
@@ -894,6 +819,12 @@ resource.name == &quot;projects/_/buckets/{BANKVAULT_NPI_BUCKET}/objects/{CREDIT
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -924,10 +855,10 @@ resource.name == &quot;projects/_/buckets/{BANKVAULT_NPI_BUCKET}/objects/{CREDIT
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

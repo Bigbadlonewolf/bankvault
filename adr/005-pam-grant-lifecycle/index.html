@@ -11,10 +11,8 @@
       
       
       
-        <link rel="prev" href="../001-build-vs-buy-jit-broker/">
+        <link rel="prev" href="../004-mfa-freshness-zero-trust-signal/">
       
-      
-        <link rel="next" href="../003-scope-and-actor-definition/">
       
       
         
@@ -25,7 +23,7 @@
     
     
       
-        <title>ADR-002: Two directories is one too many - BankVault</title>
+        <title>ADR-005: Grant lifecycle, detect not contain - BankVault</title>
       
     
     
@@ -76,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#adr-002-two-directories-is-one-too-many" class="md-skip">
+        <a href="#adr-005-grant-lifecycle-and-why-reconciliation-detects-instead-of-contains" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ADR-002: Two directories is one too many
+              ADR-005: Grant lifecycle, detect not contain
             
           </span>
         </div>
@@ -418,37 +416,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ADR-002: Two directories is one too many
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../002-workforce-identity-federation-vs-iap/" class="md-nav__link">
         
   
   
@@ -464,92 +435,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#context" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Context
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#decision" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Decision
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rationale
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#consequences" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Consequences
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#alternatives-considered" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Alternatives considered
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assumptions-to-verify" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Assumptions to verify
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -615,10 +500,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../005-pam-grant-lifecycle/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-005: Grant lifecycle, detect not contain
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -634,6 +546,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rationale
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-open-question-stated-not-hidden" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The open question, stated not hidden
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives-considered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives considered
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -706,6 +704,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-open-question-stated-not-hidden" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The open question, stated not hidden
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#consequences" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -721,17 +730,6 @@
     <span class="md-ellipsis">
       
         Alternatives considered
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assumptions-to-verify" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Assumptions to verify
       
     </span>
   </a>
@@ -758,43 +756,48 @@
   
 
 
-<h1 id="adr-002-two-directories-is-one-too-many">ADR-002: Two directories is one too many<a class="headerlink" href="#adr-002-two-directories-is-one-too-many" title="Permanent link">&para;</a></h1>
+<h1 id="adr-005-grant-lifecycle-and-why-reconciliation-detects-instead-of-contains">ADR-005: Grant lifecycle, and why reconciliation detects instead of contains<a class="headerlink" href="#adr-005-grant-lifecycle-and-why-reconciliation-detects-instead-of-contains" title="Permanent link">&para;</a></h1>
 <ul>
 <li><strong>Status:</strong> Accepted</li>
-<li><strong>Date:</strong> 2026-07-08</li>
+<li><strong>Date:</strong> 2026-07-14</li>
 <li><strong>Deciders:</strong> Lanre</li>
-<li><strong>Related:</strong> ADR-004</li>
+<li><strong>Related:</strong> ADR-001, ADR-004</li>
 </ul>
 <h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
-<p>BankVault needs to know who an underwriter is and which group they belong to, so PAM can decide whether they are eligible for the credit-report entitlement. The underwriters already exist in the lender's corporate identity provider (assume Okta or Entra ID). The question is how GCP learns about them.</p>
-<p>Two paths:</p>
+<p>Once ADR-001 handed the grant lifecycle to PAM, a question remained: who watches the watcher. PAM expires grants on its own, and the IAM Condition denies access the instant <code>request.time</code> crosses <code>window_end</code>. So what work is left for this repo after the grant is created?</p>
+<p>Two things PAM's expiry does not do on its own:</p>
 <ol>
-<li><strong>Workforce Identity Federation</strong>: GCP trusts the corporate IdP directly through a workforce identity pool. Underwriters sign in with their existing corporate credentials; no Google account is created for them.</li>
-<li><strong>Cloud Identity / Google Workspace accounts</strong> fronted by Cloud Identity-Aware Proxy (IAP): each underwriter gets a Google identity, provisioned and de-provisioned to mirror the corporate directory.</li>
+<li>Guarantee that the append-only ledger has a close-out row for every grant, even if the broker crashed between creating the grant and recording it.</li>
+<li>Notice a grant that should have expired but is still visible as active, or an IAM binding on the bucket that no ledger row explains.</li>
 </ol>
 <h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
-<p>Use Workforce Identity Federation. Underwriters and approvers resolve through a workforce pool federated to the corporate IdP. Do not create a parallel Cloud Identity directory for them.</p>
+<p>Add a <strong>detect-only</strong> reconcile job: Cloud Scheduler triggers it every 15 minutes through Pub/Sub. It queries <code>access_grants</code> for GRANT rows whose <code>window_end</code> has passed with no matching EXPIRE row, cross-checks each against live PAM grant state, writes an <code>EXPIRE_FLAG</code> row, and emits a structured alert log.</p>
+<p>It does not revoke anything. The reconcile service account is read-only on PAM and the bucket; the only write it can make to the ledger is an EXPIRE_FLAG row.</p>
 <h2 id="rationale">Rationale<a class="headerlink" href="#rationale" title="Permanent link">&para;</a></h2>
-<p>The failure mode that matters here is the leaver who does not fully leave. When an underwriter is terminated or transferred, someone disables their corporate IdP account. That is the one action the offboarding process is built around and audited against.</p>
-<p>With federation, that single action removes their GCP eligibility too, because there is no separate Google account to forget. With a mirrored Cloud Identity directory, offboarding now depends on a <em>second</em> de-provisioning step firing correctly and on time. Every sync has a lag and a failure mode, and the failure mode here is a terminated underwriter who can still read credit reports because the mirror did not update. That is the precise gap this whole project exists to close, reintroduced one layer down.</p>
-<p>One directory has one place to disable an account. Two directories have two, and the second one is the one nobody remembers during an incident.</p>
+<p>The honest reason it detects instead of contains: PAM already owns containment. The grant's expiry and the IAM Condition are the two mechanisms that actually end access (see architecture.md), and both are faster and more reliable than a 15-minute sweep. A reconcile job that also revoked would be a <em>second</em>, slower enforcement path that can disagree with the first, and two enforcement paths that can disagree is how you get an incident where each thinks the other handled it.</p>
+<p>So the sweep's job is completeness and anomaly detection, not enforcement. That produces one claim I can defend and one I refuse to make:</p>
+<ul>
+<li>Defensible: "an overrun or a missing close-out is <strong>detected</strong> within roughly one reconcile interval."</li>
+<li>Not made: "an overrun is <strong>contained</strong> within 15 minutes."</li>
+</ul>
+<p>Those are different sentences. Writing the second one when only the first is true is the exact kind of overclaim that fails under questioning, so the design says detected and means it.</p>
+<h2 id="the-open-question-stated-not-hidden">The open question, stated not hidden<a class="headerlink" href="#the-open-question-stated-not-hidden" title="Permanent link">&para;</a></h2>
+<p>If a grant genuinely overruns (PAM reports it active past <code>window_end</code>, which should not happen but is the thing worth catching), detection is not containment. The flag lands in a log and a ledger row; nobody is paged, and nothing is revoked automatically.</p>
+<p>Wiring the flag to an automated PAM grant revocation is the obvious next step, and it is deliberately not in this build for one reason: automated revocation is an action, and an action needs an alerting and rollback story around it before it runs unattended against a production access-control plane. Detection first, with the escalation path documented, is the honest ordering. Containment automation is a decision to make on purpose, with its own ADR, not a feature to bolt on because the detection was already there.</p>
 <h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
 <p><strong>Positive</strong>
-- Offboarding is a single action in the system of record. No sync job sits between "fired" and "cannot read credit reports."
-- No per-user Google account lifecycle to license, manage, or audit.
-- Group membership (underwriter, approver) stays authoritative in the corporate IdP, where HR-driven changes already land.</p>
+- One enforcement path (PAM + IAM Condition), so no two-writer disagreement.
+- The ledger is guaranteed to close out every grant, which is what makes it SOX 404 evidence rather than a best-effort log.
+- The limit is stated in the same breath as the capability: detected, not contained.</p>
 <p><strong>Negative</strong>
-- BankVault's availability is coupled to the IdP being reachable for federation. This is the same coupling ADR-004 accepts deliberately, so it is a consistent trade, not a new one.
-- Federation configuration (attribute mapping, the workforce pool provider) is fiddlier to set up correctly than creating Google accounts, and a wrong attribute mapping fails in confusing ways.
-- Some GCP surfaces have historically had gaps in workforce-identity support. Confirm PAM eligibility and the console/API request flow work with workforce identities in the target org before committing operationally.</p>
+- A true overrun is detected, not stopped. If PAM ever failed to expire a grant, there is a detection-to-response gap bounded only by how fast a human acts on the flag.
+- The alert is a structured log, not a page. Turning it into an actual notification is unfinished (README lists it under out-of-scope).
+- 15 minutes is a chosen cadence; a tighter interval costs more invocations for a faster detection floor.</p>
 <h2 id="alternatives-considered">Alternatives considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Cloud Identity mirror + IAP (option 2).</strong> Rejected. It reintroduces the second directory and makes offboarding depend on a sync. IAP also solves a different problem (context-aware access to apps), not "who is eligible for a PAM entitlement."</li>
-<li><strong>Individual Google accounts, manually managed.</strong> Rejected outright. Manual provisioning of privileged identities is the anti-pattern; it does not survive any headcount.</li>
-</ul>
-<h2 id="assumptions-to-verify">Assumptions to verify<a class="headerlink" href="#assumptions-to-verify" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Workforce Identity Federation principals can be named as eligible on a PAM entitlement in the target organization, and can complete the grant-request flow. Confirm against current PAM documentation and a test in the target org before relying on it.</li>
+<li><strong>Reconcile job that also revokes.</strong> Rejected for now. It creates a second enforcement path that can disagree with PAM, and it runs an unalerted automated action against the access plane. Revisit under its own ADR once alerting and rollback exist.</li>
+<li><strong>No reconcile job; trust PAM entirely.</strong> Rejected. It leaves the ledger's completeness to the broker never crashing at the wrong moment, and it catches no anomalies. The ledger is the audit artifact; it cannot be best-effort.</li>
+<li><strong>A tighter sweep (every minute).</strong> Rejected as the default. It lowers the detection floor at a real cost and does nothing about the fact that detection is not containment. The interval is a tunable if a threat model justifies it.</li>
 </ul>
 
 
