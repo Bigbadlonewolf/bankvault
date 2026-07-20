@@ -935,7 +935,7 @@
 </tr>
 <tr>
 <td><strong>BigQuery <code>access_grants</code> ledger</strong></td>
-<td>Append-only record: REQUEST / GRANT / DENY / EXPIRE_FLAG</td>
+<td>Append-only record: REQUEST / DENY / EXPIRE_FLAG (no GRANT rows; the broker writes none, ADR-006)</td>
 <td>Denials matter as much as grants. A denial with a reason is the evidence that the control fired.</td>
 </tr>
 <tr>
@@ -944,8 +944,13 @@
 <td>The application ledger can be wrong if the application has a bug. The platform export cannot be edited by application code. Two independent records is the point.</td>
 </tr>
 <tr>
+<td><strong>GCS DATA_READ audit config</strong> (<code>terraform/logging.tf</code>)</td>
+<td>Enables Cloud Storage DATA_READ audit logs project-wide</td>
+<td>Closes the in-window observation gap: PAM logs that a grant was issued, but without DATA_READ the reads an underwriter makes <em>under</em> that grant are recorded nowhere. Now the in-window reads land in Cloud Logging and the platform export, so what happens during the 30 minutes is observed, not just that the grant existed.</td>
+</tr>
+<tr>
 <td><strong><code>reconcile</code></strong> (Pub/Sub, <code>*/15</code>)</td>
-<td>Finds GRANT rows past <code>window_end</code> with no close-out row, cross-checks PAM grant state, writes EXPIRE_FLAG and alerts</td>
+<td>Reconstructs grants from the PAM <code>CreateGrant</code> audit events in <code>bankvault_platform_logs</code> (the broker writes no GRANT row, ADR-006), finds any past <code>window_end</code> with no close-out row, cross-checks live PAM grant state, writes EXPIRE_FLAG and alerts</td>
 <td>It <strong>detects</strong> an overrun. It does not contain one. PAM owns expiry, and a second enforcement path would be a second thing that can be wrong. (ADR-005.)</td>
 </tr>
 <tr>
