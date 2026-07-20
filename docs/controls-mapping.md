@@ -21,7 +21,7 @@ Credit reports commonly carry cardholder-adjacent PII; Requirement 7 is the leas
 |---|---|---|
 | 7.2.1 — access assigned based on job classification and function | Explicit | Eligibility is the underwriter group on the entitlement; no individual bindings. `terraform/pam.tf` |
 | 7.2.4 — review user access periodically | Interpretive | Grants are ephemeral; the standing bindings that trigger 7.2.4 reviews are absent by design. |
-| 7.2.5 — least privilege for system/application accounts | Explicit | Broker SA may create grants only on one entitlement; reconcile SA is read-only plus EXPIRE_FLAG writes. `terraform/iam.tf` |
+| 7.2.5 — least privilege for system/application accounts | Explicit | Broker SA holds PAM viewer only and cannot create grants; grant-creation eligibility sits with the underwriter group on the entitlement (ADR-006). Reconcile SA is read-only plus EXPIRE_FLAG writes. `terraform/iam.tf` |
 | 7.3.1 / 7.3.2 — access enforced by an access-control system, by need-to-know | Explicit | IAM Condition pins each grant to one object prefix and one time window. `terraform/pam.tf` |
 
 ## SOX 404 — ITGC (logical access and change management)
