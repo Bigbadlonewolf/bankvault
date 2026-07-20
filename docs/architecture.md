@@ -72,9 +72,9 @@ If PAM expires grants on its own, the reconcile job looks redundant. It is not, 
 
 It exists for two things the expiry path does not give you:
 
-- **Ledger completeness.** The `access_grants` ledger is the SOX 404 evidence artifact. The reconcile job confirms every GRANT row whose `window_end` has passed has a corresponding close-out (an EXPIRE row), and writes one if the lifecycle event was never recorded. Without it, a function crash between grant and expiry could leave a grant that looks perpetually open in the ledger even though PAM expired it.
+- **Ledger completeness.** The `access_grants` ledger is the SOX 404 evidence artifact. The broker writes no GRANT row (ADR-006), so the reconcile job reconstructs each grant from the PAM `CreateGrant` admin-activity audit events exported to `bankvault_platform_logs`, confirms every grant whose `window_end` has passed has a corresponding close-out, and writes an EXPIRE_FLAG row if the lifecycle event was never recorded. Without it, a grant could look perpetually open even though PAM expired it.
 
-- **Anomaly detection.** It cross-checks the ledger against live PAM grant state and flags a grant that PAM still reports active past its `window_end`, or an IAM binding on the bucket that no ledger row explains.
+- **Anomaly detection.** It cross-checks the reconstructed grants against live PAM grant state and flags a grant that PAM still reports active past its `window_end`, or an IAM binding on the bucket that no ledger row explains.
 
 What it does **not** do is revoke. It writes an `EXPIRE_FLAG` row and emits a structured alert log. So the defensible claim is "an overrun is detected within roughly one reconcile interval (15 minutes)," not "contained within 15 minutes." Those are different sentences and only one of them is true. If you need containment rather than detection, the next step is wiring the flag to an automated PAM grant revocation, and that is a deliberate future decision, not an accident of the current build (ADR-005).
 
@@ -104,7 +104,7 @@ Recency, not mere session validity, is the signal that matters for a privileged 
 | Boundary | Who is trusted | What is checked |
 |---|---|---|
 | Underwriter → broker | Nobody by default | OIDC token shape + `auth_time` freshness, domain, SoD |
-| Broker → PAM | Broker SA, narrowly | SA may create grants only on the one entitlement |
+| Broker → PAM | Broker SA, narrowly | SA holds PAM viewer only; it cannot create grants (ADR-006) |
 | PAM → bucket | The conditioned grant | IAM Condition: object prefix + time window |
 | Broker/reconcile → ledger | Broker SA (write), reconcile SA (read) | Reconcile cannot write access_grants except EXPIRE_FLAG rows |
 
