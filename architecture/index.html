@@ -462,6 +462,33 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../interview-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview defense
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -476,10 +503,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -497,8 +524,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -648,6 +675,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/006-who-requests-the-grant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-006: The broker cannot request the grant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -781,40 +836,51 @@
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
 <p>BankVault is one narrow flow done carefully: one actor, one resource, one regulated data class. An underwriter reads one borrower's credit report for 30 minutes, gated on a fresh login, and never holds that access outside the window.</p>
 <h2 id="the-request-path-field-by-field">The request path, field by field<a class="headerlink" href="#the-request-path-field-by-field" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>Underwriter
-    │  POST /request
-    │  { requested_by, approved_by, application_id, justification, id_token }
+<div class="highlight"><pre><span></span><code>Access Context Manager reauth binding on the underwriter group
+    session length 1h (platform floor: 0s, or 1h-24h, nothing between).
+    THIS is the enforced recency control. It covers the group&#39;s whole
+    Google Cloud session, because PAM is not independently targetable
+    by a scopedAccessSettings binding. See ADR-006.
+    │
     ▼
-request_broker (Cloud Function v2, HTTP, Python 3.12)
-    ├── verify_mfa_freshness(id_token)
-    │       decode the OIDC token, read auth_time, reject if
-    │       now - auth_time &gt; max_auth_age_seconds (default 300).
-    │       This is a broker-side check against the identity provider,
-    │       NOT an IAM Condition. GCP IAM has no &quot;how recently did this
-    │       principal MFA&quot; attribute. See ADR-004.
+Underwriter
     │
-    ├── validate_request()
-    │       requested_by and approved_by share the allowed domain,
-    │       requested_by != approved_by (segregation of duties),
-    │       duration_minutes &lt;= max_grant_minutes,
-    │       application_id matches the known-application pattern.
-    │       Any failure writes a DENY row and returns before any PAM call.
+    ├─ (optional) POST /request ─────────────────────────────┐
+    │  { requested_by, approved_by, application_id,          │
+    │    justification, id_token }                           │
+    │                                                        ▼
+    │                        request_broker (Cloud Function v2, HTTP, Python 3.12)
+    │                            ├── verify_mfa_freshness(id_token)
+    │                            │       decode the OIDC token, read auth_time, reject if
+    │                            │       now - auth_time &gt; max_auth_age_seconds (default 900).
+    │                            │       NOT enforcement. The broker is skippable, so this is
+    │                            │       early rejection plus the auth_time the ledger records.
+    │                            │       Also NOT an IAM Condition: GCP IAM has no &quot;how recently
+    │                            │       did this principal MFA&quot; attribute. See ADR-004, ADR-006.
+    │                            │
+    │                            ├── validate_request()
+    │                            │       requested_by and approved_by share the allowed domain,
+    │                            │       requested_by != approved_by (segregation of duties),
+    │                            │       duration_minutes &lt;= max_grant_minutes,
+    │                            │       application_id matches the known-application pattern.
+    │                            │
+    │                            └── write_ledger_row()
+    │                                    REQUEST (cleared pre-flight, entitlement named back
+    │                                    to the caller) or DENY (rejected, with reason).
+    │                                    Never GRANT: this function does not create grants
+    │                                    and never observes one being created.
     │
-    ├── create_pam_grant()
-    │       call PAM grants.create against the entitlement
-    │       bankvault-credit-report-read. The entitlement (provisioned by
-    │       Terraform, not by this function) already carries:
-    │         - role: roles/storage.objectViewer
-    │         - the IAM Condition pinning object path + expiry
-    │         - the max-duration cap
-    │         - the approval requirement
-    │       The function passes justification and the resolved object
-    │       prefix; PAM handles approval routing and, on approval,
-    │       activates the conditioned grant.
-    │
-    └── write_ledger_row()
-            INSERT one row into BigQuery access_grants for every outcome:
-            REQUEST (received), GRANT (PAM grant created), or DENY (rejected).
+    ▼
+grants.create — called by the UNDERWRITER, as themselves
+    PAM attaches a grant&#39;s privileges to the calling principal and CreateGrant has
+    no grantee parameter, so no intermediary can request on their behalf (ADR-006).
+    ▼
+PAM entitlement: bankvault-credit-report-&lt;application_id&gt;
+    provisioned by Terraform, one per application, already carrying:
+      - role: roles/storage.objectViewer
+      - the IAM Condition pinning the object prefix (static per entitlement)
+      - max_request_duration (the cap PAM expires the grant at)
+      - the approval requirement (one approver + justification)
     ▼
 credit-reports bucket (GCS)
     uniform bucket-level access, object versioning on,
@@ -853,7 +919,9 @@ credit-reports bucket (GCS)
 <p>See <a href="../controls-mapping/">Compliance coverage</a> for how each piece maps to a specific GLBA, PCI DSS, FFIEC, or SOX 404 control.</p>
 <h2 id="identity-plane">Identity plane<a class="headerlink" href="#identity-plane" title="Permanent link">&para;</a></h2>
 <p>Underwriters and approvers resolve through Workforce Identity Federation, not a second cloud-local directory. A leaver disabled in the corporate IdP loses BankVault eligibility with them, because there is no parallel Cloud Identity account to forget about. That decision, and the one directory it deliberately rules out, is ADR-002.</p>
-<p>The broker does not trust a session token merely because it is unexpired. It reads <code>auth_time</code> and requires a login fresh within <code>max_auth_age_seconds</code>. Access Context Manager reauthentication session controls are the defense-in-depth layer behind that broker check; the broker check is the one this repo implements. ADR-004 covers why freshness, not mere validity, is the signal that matters for a privileged read.</p>
+<p>Recency, not mere session validity, is the signal that matters for a privileged read. ADR-004 covers why. ADR-006 corrects where it is enforced, and the correction matters because the earlier version of this paragraph had the layers the wrong way round.</p>
+<p><strong>Access Context Manager reauthentication session controls are the enforcement.</strong> A binding on the underwriter group sets a session length of one hour, which is the platform's floor rather than a tuned value: <code>--session-length</code> accepts <code>0s</code> or a duration between 1 hour and 24 hours. Because PAM is not documented as an independently targetable application for <code>scopedAccessSettings</code>, that binding covers the group's entire Google Cloud session and not just the credit-report path. Broad blast radius, real enforcement.</p>
+<p><strong>The broker's 900-second check is evidence, not enforcement.</strong> It reads <code>auth_time</code> and refuses anything staler than fifteen minutes, which rejects bad requests early and puts a tighter number in the ledger than the platform bound. It cannot be enforcement, because an underwriter who never calls the broker still reaches PAM. Whether a raw REST call to the PAM API is covered by a console-scoped ACM binding is <code>[verify against current GCP docs]</code>; the unnarrowed binding sidesteps the question.</p>
 <h2 id="trust-boundaries">Trust boundaries<a class="headerlink" href="#trust-boundaries" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

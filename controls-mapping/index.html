@@ -14,7 +14,7 @@
         <link rel="prev" href="../architecture/">
       
       
-        <link rel="next" href="../adr/001-build-vs-buy-jit-broker/">
+        <link rel="next" href="../interview-defense/">
       
       
         
@@ -440,6 +440,33 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../interview-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview defense
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -454,10 +481,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -475,8 +502,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -626,6 +653,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/006-who-requests-the-grant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-006: The broker cannot request the grant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -755,7 +810,7 @@
 <tr>
 <td>314.4(c)(1) — periodic review of access</td>
 <td>Interpretive</td>
-<td>Standing access that would need periodic review does not exist; every grant is reviewed at request time by an approver and expires within 30 minutes. <code>functions/request_broker/main.py</code> (<code>validate_request</code>)</td>
+<td>Standing access that would need periodic review does not exist; every grant is reviewed at request time by an approver and expires within 30 minutes. Review and expiry are PAM's <code>approval_workflow</code> and <code>max_request_duration</code>, not application code. <code>terraform/pam.tf</code></td>
 </tr>
 <tr>
 <td>314.4(b) — risk assessment of foreseeable internal threats</td>
@@ -816,7 +871,7 @@
 <tr>
 <td>Logical access — provisioning and de-provisioning</td>
 <td>Explicit</td>
-<td>Provisioning is the PAM grant; de-provisioning is PAM auto-expiry. Both are logged. <code>functions/request_broker/main.py</code>, <code>terraform/pam.tf</code></td>
+<td>Provisioning is the PAM grant, requested by the underwriter themselves; de-provisioning is PAM auto-expiry. Evidence is PAM's admin-activity audit log exported to <code>bankvault_platform_logs</code>, not application code. <code>terraform/pam.tf</code>, <code>terraform/logging.tf</code></td>
 </tr>
 <tr>
 <td>Logical access — audit trail</td>
@@ -831,7 +886,7 @@
 <tr>
 <td>Segregation of duties</td>
 <td>Explicit</td>
-<td>Requester cannot be approver; enforced in code before any grant. <code>functions/request_broker/main.py</code> (<code>validate_request</code>)</td>
+<td>Requester cannot approve their own grant. Enforced by PAM's <code>approval_workflow</code>, whose approver principals are a different group from <code>eligible_users</code>. The broker's <code>validate_request</code> also rejects self-approval, but as pre-flight evidence rather than enforcement — it is skippable (ADR-006). <code>terraform/pam.tf</code>, <code>terraform/variables.tf</code></td>
 </tr>
 </tbody>
 </table>

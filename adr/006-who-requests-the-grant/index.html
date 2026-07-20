@@ -11,26 +11,26 @@
       
       
       
+        <link rel="prev" href="../005-pam-grant-lifecycle/">
       
-        <link rel="next" href="architecture/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>BankVault</title>
+        <title>ADR-006: The broker cannot request the grant - BankVault</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -49,7 +49,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#bankvault" class="md-skip">
+        <a href="#adr-006-the-broker-cannot-request-the-grant" class="md-skip">
           Skip to content
         </a>
       
@@ -90,7 +90,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="BankVault" class="md-header__button md-logo" aria-label="BankVault" data-md-component="logo">
+    <a href="../.." title="BankVault" class="md-header__button md-logo" aria-label="BankVault" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              ADR-006: The broker cannot request the grant
             
           </span>
         </div>
@@ -226,7 +226,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="BankVault" class="md-nav__button md-logo" aria-label="BankVault" data-md-component="logo">
+    <a href="../.." title="BankVault" class="md-nav__button md-logo" aria-label="BankVault" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -253,37 +253,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -299,48 +272,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#start-here" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Start here
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#architecture-decision-records" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Architecture decision records
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -352,7 +283,7 @@
   
   
     <li class="md-nav__item">
-      <a href="architecture/" class="md-nav__link">
+      <a href="../../architecture/" class="md-nav__link">
         
   
   
@@ -379,7 +310,7 @@
   
   
     <li class="md-nav__item">
-      <a href="controls-mapping/" class="md-nav__link">
+      <a href="../../controls-mapping/" class="md-nav__link">
         
   
   
@@ -406,7 +337,7 @@
   
   
     <li class="md-nav__item">
-      <a href="interview-defense/" class="md-nav__link">
+      <a href="../../interview-defense/" class="md-nav__link">
         
   
   
@@ -430,8 +361,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -442,11 +375,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -467,7 +400,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -485,7 +418,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/001-build-vs-buy-jit-broker/" class="md-nav__link">
+      <a href="../001-build-vs-buy-jit-broker/" class="md-nav__link">
         
   
   
@@ -513,7 +446,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/002-workforce-identity-federation-vs-iap/" class="md-nav__link">
+      <a href="../002-workforce-identity-federation-vs-iap/" class="md-nav__link">
         
   
   
@@ -541,7 +474,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/003-scope-and-actor-definition/" class="md-nav__link">
+      <a href="../003-scope-and-actor-definition/" class="md-nav__link">
         
   
   
@@ -569,7 +502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/004-mfa-freshness-zero-trust-signal/" class="md-nav__link">
+      <a href="../004-mfa-freshness-zero-trust-signal/" class="md-nav__link">
         
   
   
@@ -597,7 +530,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/005-pam-grant-lifecycle/" class="md-nav__link">
+      <a href="../005-pam-grant-lifecycle/" class="md-nav__link">
         
   
   
@@ -622,10 +555,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="adr/006-who-requests-the-grant/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-006: The broker cannot request the grant
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -641,6 +601,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rationale
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives-considered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives considered
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reversal-condition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversal condition
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -680,10 +726,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#start-here" class="md-nav__link">
+  <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start here
+        Context
       
     </span>
   </a>
@@ -691,10 +737,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#architecture-decision-records" class="md-nav__link">
+  <a href="#decision" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architecture decision records
+        Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rationale
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives-considered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives considered
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reversal-condition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversal condition
       
     </span>
   </a>
@@ -721,23 +811,68 @@
   
 
 
-<h1 id="bankvault">BankVault<a class="headerlink" href="#bankvault" title="Permanent link">&para;</a></h1>
-<p>Just-in-time privilege elevation for a mock mortgage lender's loan-origination pipeline. No underwriter holds standing access to borrower credit reports. Each read is a time-bound, object-scoped grant, gated on a fresh multi-factor login, issued through Google Cloud Privileged Access Manager, and written to an append-only BigQuery ledger before it goes live.</p>
-<p>This site documents the architecture and the decisions behind it. The code lives at <a href="https://github.com/Bigbadlonewolf/bankvault">github.com/Bigbadlonewolf/bankvault</a>.</p>
-<h2 id="start-here">Start here<a class="headerlink" href="#start-here" title="Permanent link">&para;</a></h2>
+<h1 id="adr-006-the-broker-cannot-request-the-grant">ADR-006: The broker cannot request the grant<a class="headerlink" href="#adr-006-the-broker-cannot-request-the-grant" title="Permanent link">&para;</a></h1>
 <ul>
-<li><strong><a href="architecture/">Architecture</a></strong> — the request path field by field, the two mechanisms that end access, and what is deliberately out of scope.</li>
-<li><strong><a href="controls-mapping/">Compliance coverage</a></strong> — each resource mapped to a specific GLBA, PCI DSS v4.0, SOX 404, or FFIEC control.</li>
+<li><strong>Status:</strong> Accepted</li>
+<li><strong>Date:</strong> 2026-07-20</li>
+<li><strong>Deciders:</strong> Lanre</li>
+<li><strong>Supersedes:</strong> none</li>
+<li><strong>Amends:</strong> ADR-004 (where freshness is enforced), ADR-001 (what the broker is for)</li>
+<li><strong>Related:</strong> ADR-001, ADR-003, ADR-004, ADR-005</li>
 </ul>
-<h2 id="architecture-decision-records">Architecture decision records<a class="headerlink" href="#architecture-decision-records" title="Permanent link">&para;</a></h2>
-<p>Each ADR states its trade-offs and its unverified assumptions rather than burying them.</p>
-<ul>
-<li><strong><a href="adr/001-build-vs-buy-jit-broker/">ADR-001: Build vs. Buy, and the week I reversed it</a></strong> — why a custom grant lifecycle was the wrong long-term mechanism, and the documented reversal to GCP Privileged Access Manager.</li>
-<li><strong><a href="adr/002-workforce-identity-federation-vs-iap/">ADR-002: Two directories is one too many</a></strong> — Workforce Identity Federation over Cloud IAP, so a leaver dies in one directory rather than surviving in a second.</li>
-<li><strong><a href="adr/003-scope-and-actor-definition/">ADR-003: Scope and actor definition</a></strong> — one underwriter, one credit report, and the GLBA Safeguards Rule basis for both.</li>
-<li><strong><a href="adr/004-mfa-freshness-zero-trust-signal/">ADR-004: MFA freshness as the signal, not session validity</a></strong> — why the broker checks <code>auth_time</code>, and where that check actually runs.</li>
-<li><strong><a href="adr/005-pam-grant-lifecycle/">ADR-005: Grant lifecycle, and why reconciliation detects instead of contains</a></strong> — PAM owns expiry; the sweep is a completeness check, and the honest claim is "detected," not "contained."</li>
-</ul>
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>Through ADR-001 and ADR-004 the design assumed the broker could sit in front of PAM: verify the login is fresh, then call <code>grants.create</code> on the underwriter's behalf. <code>request_broker</code> did exactly that, at <code>functions/request_broker/main.py</code>. The seam carried a VERIFY-BEFORE-DEPLOY note saying the grantee semantics had to be confirmed against the live PAM API before anyone deployed it.</p>
+<p>That note was the right instinct and it was never cashed. Verifying it closed the design off.</p>
+<p>Google's Privileged Access Manager documentation is explicit about who receives the privileges: if a group is added as a requester on an entitlement, every member of that group can request a grant, but <strong>only the individual account that requests the grant receives the elevated privileges</strong>. There is no grantee field and no on-behalf-of parameter on <code>CreateGrant</code>. Privileges attach to the calling principal.</p>
+<p>The broker calls PAM with its own service-account credentials. So the broker-mediated design does not grant credit-report read to the underwriter who asked. It grants it to <code>bankvault-request-broker@…</code>, a service account that is always running, holds the binding for the full window, and is never reviewed by anyone.</p>
+<p>That is standing access to borrower credit reports, held by a non-human identity, created by the control that exists to eliminate standing access. It is worse than the problem in the README, because a transferred underwriter at least shows up in a quarterly access review and a service account does not.</p>
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<p><strong>The broker does not create grants.</strong> <code>_create_pam_grant</code> is removed from <code>request_broker</code>. The underwriter requests their own grant directly against the PAM entitlement, as the eligible principal PAM requires them to be.</p>
+<p>The broker keeps the two jobs it can actually do:</p>
+<ol>
+<li><strong>Pre-flight rejection.</strong> It refuses requests that fail domain, segregation-of-duties, duration-cap, application-id, and MFA-freshness checks, and records the denial with a reason.</li>
+<li><strong>The per-request audit record.</strong> It writes the <code>auth_time</code> that gated the request into the ledger, tied to a specific application and justification.</li>
+</ol>
+<p><strong>Freshness enforcement moves to the platform, and the claim gets smaller.</strong> Enforced recency is an Access Context Manager reauthentication binding on the underwriter group. The honest numbers:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Window</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Access Context Manager reauth binding</td>
+<td><strong>1 hour</strong></td>
+<td>Enforced. Platform minimum; <code>--session-length</code> accepts <code>0s</code> or 1h–24h and nothing between.</td>
+</tr>
+<tr>
+<td><code>request_broker</code> freshness check</td>
+<td><strong>15 min</strong> (<code>max_auth_age_seconds</code>, 900)</td>
+<td>Not enforced. Early rejection plus the recorded <code>auth_time</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>ADR-004's decision stands — recency is the right signal, not session validity. What changes is the sentence about <em>where it is enforced</em>. ADR-004 says the broker enforces it. After this ADR the broker cannot, because an underwriter who skips the broker and calls PAM directly is doing the thing PAM is designed for.</p>
+<h2 id="rationale">Rationale<a class="headerlink" href="#rationale" title="Permanent link">&para;</a></h2>
+<p>The broker was never a chokepoint and calling it one was the error. The underwriter has to be the eligible principal on the entitlement, so the PAM request path is open to them by construction. A control that can be bypassed by not using it is not enforcement, and describing it as enforcement is the kind of claim that collapses the first time someone asks "what stops them calling PAM directly?"</p>
+<p>Moving freshness to ACM buys real enforcement at the cost of precision. One hour is looser than fifteen minutes. Two things make that acceptable. The grant itself is still capped at thirty minutes, approval-gated, and object-scoped, so recency is one signal among several rather than the only thing standing between a stale session and a credit report. And the ledger still records the fifteen-minute-fresh <code>auth_time</code> on every request that came through the broker, so the evidence available to an examiner is tighter than the enforced bound.</p>
+<p>Say it as two sentences that are both true, rather than one that is convenient: enforcement is one hour, at the platform. Evidence is fifteen minutes, in the ledger.</p>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<p><strong>The reauth binding is broader than this project.</strong> ACM bindings apply to all applications for the bound principals unless narrowed with <code>scopedAccessSettings</code>, which targets applications by OAuth <code>clientId</code> or by name ("Cloud Console", "Google Cloud SDK"). <strong>PAM is not documented as an independently targetable application.</strong> So the binding covers the underwriter group's whole Google Cloud session, not the credit-report request path. Every underwriter reauthenticates hourly for everything they do in GCP. That is a real operational cost imposed on people who are not the subject of this control, and it belongs in the trade-off column, not in a footnote.</p>
+<p><strong>A direct REST call to the PAM API may not be covered by a console-scoped binding.</strong> If the binding is narrowed to Cloud Console and Google Cloud SDK, whether a raw API call from another client is still gated is not something I can establish from the documentation. <code>[verify against current GCP docs]</code> before relying on the narrowed form. The unnarrowed binding avoids the question and is the safer default.</p>
+<p><strong>The broker's blast radius shrinks.</strong> It no longer needs permission to create grants. Its service account holds PAM viewer and BigQuery jobUser. It cannot create a grant, cannot read the credit-reports bucket, and cannot delete ledger rows. Worst case on compromise is falsified or suppressed ledger rows, which is precisely why the platform log export exists as an independent record application code cannot touch.</p>
+<p><strong><code>approved_by</code> is a claim, not evidence.</strong> It arrives in the request body. Real approval evidence is PAM's approval workflow and its admin-activity audit logs. The compliance mapping should point at those, not at the ledger column.</p>
+<p><strong>The GRANT ledger row changes meaning.</strong> The broker no longer observes a grant being created, so it cannot write <code>pam_grant_name</code>. It writes a <code>REQUEST</code> row recording that a request passed pre-flight. Grant creation and expiry are reconstructed from the PAM audit logs in <code>bankvault_platform_logs</code>, joined on requester and application. <code>reconcile</code> already cross-checks live PAM grant state and is unaffected.</p>
+<h2 id="alternatives-considered">Alternatives considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
+<p><strong>Keep the broker in the grant path and accept a service-account grantee.</strong> Rejected. It inverts the project's thesis. If the service account holds the access, there is no just-in-time property left to demonstrate.</p>
+<p><strong>Give each underwriter a dedicated service account the broker impersonates.</strong> Rejected. It reintroduces per-user standing identity, doubles the identity surface, and still separates the human from the privilege. ADR-002 rejected a second directory for the same reason.</p>
+<p><strong>Enforce freshness with an IAM Condition instead.</strong> Not possible, and worth restating because it looks plausible. IAM Conditions expose request-time and resource attributes; there is no authentication-recency attribute. Writing a CEL clause for it would be inventing a capability. This is unchanged from ADR-004.</p>
+<p><strong>Drop the broker's freshness check now that ACM enforces recency.</strong> Rejected. The fifteen-minute check is the only thing producing a per-request <code>auth_time</code> in the ledger, and it rejects stale requests before they reach PAM. Redundant as enforcement, useful as evidence.</p>
+<h2 id="reversal-condition">Reversal condition<a class="headerlink" href="#reversal-condition" title="Permanent link">&para;</a></h2>
+<p>If PAM gains a grantee or on-behalf-of parameter on <code>CreateGrant</code>, allowing a broker to request a grant whose privileges attach to a named human, the broker-mediated design becomes viable again and the chokepoint argument returns with it. If ACM gains sub-hour session lengths or PAM becomes independently targetable via <code>scopedAccessSettings</code>, the enforcement and evidence windows collapse back together and the two-number framing above stops being necessary.</p>
 
 
 
@@ -793,10 +928,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

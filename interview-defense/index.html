@@ -1,0 +1,1099 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Just-in-time privilege elevation for a mock mortgage lender, built on GCP Privileged Access Manager.">
+      
+      
+      
+      
+        <link rel="prev" href="../controls-mapping/">
+      
+      
+        <link rel="next" href="../adr/001-build-vs-buy-jit-broker/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Interview defense - BankVault</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#bankvault-technical-deep-dive-defense-pack" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="BankVault" class="md-header__button md-logo" aria-label="BankVault" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BankVault
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Interview defense
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Bigbadlonewolf/bankvault" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Bigbadlonewolf/bankvault
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="BankVault" class="md-nav__button md-logo" aria-label="BankVault" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    BankVault
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Bigbadlonewolf/bankvault" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Bigbadlonewolf/bankvault
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controls-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview defense
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview defense
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-90-second-opener" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The 90-second opener
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-architecture-component-by-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architecture, component by component
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-two-reversals-your-strongest-material" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. The two reversals, your strongest material
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. The two reversals, your strongest material">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reversal-1-adr-001-build-vs-buy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversal 1: ADR-001, build vs. buy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reversal-2-adr-006-who-requests-the-grant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversal 2: ADR-006, who requests the grant
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-killer-questions-with-answers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Killer questions, with answers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-compliance-mapping-where-to-be-careful" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Compliance mapping: where to be careful
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-sentences-you-must-not-say" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Sentences you must not say
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-pre-interview-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Pre-interview checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision records
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decision records
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/001-build-vs-buy-jit-broker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-001: Build vs. Buy, reversed
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/002-workforce-identity-federation-vs-iap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-002: Two directories is one too many
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/003-scope-and-actor-definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-003: Scope and actor definition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/004-mfa-freshness-zero-trust-signal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-004: MFA freshness as the signal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/005-pam-grant-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-005: Grant lifecycle, detect not contain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/006-who-requests-the-grant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-006: The broker cannot request the grant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-90-second-opener" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The 90-second opener
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-architecture-component-by-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architecture, component by component
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-two-reversals-your-strongest-material" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. The two reversals, your strongest material
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. The two reversals, your strongest material">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reversal-1-adr-001-build-vs-buy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversal 1: ADR-001, build vs. buy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reversal-2-adr-006-who-requests-the-grant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversal 2: ADR-006, who requests the grant
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-killer-questions-with-answers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Killer questions, with answers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-compliance-mapping-where-to-be-careful" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Compliance mapping: where to be careful
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-sentences-you-must-not-say" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Sentences you must not say
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-pre-interview-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Pre-interview checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="bankvault-technical-deep-dive-defense-pack">BankVault: technical deep-dive defense pack<a class="headerlink" href="#bankvault-technical-deep-dive-defense-pack" title="Permanent link">&para;</a></h1>
+<p><strong>Status gate: cleared 2026-07-20.</strong> ADR-006 is committed, <code>_create_pam_grant</code> is gone from <code>functions/request_broker/main.py</code>, and <code>test_broker_has_no_grant_creation_path</code> fails if it returns. The code and this document now agree.</p>
+<p><strong>One correction since this was drafted.</strong> The original draft said freshness enforcement "lives in" an Access Context Manager reauth policy without naming a number. Checking the docs: <code>--session-length</code> accepts <code>0s</code> or 1h–24h and nothing between, so <strong>enforced recency is one hour, not fifteen minutes</strong>, and PAM is not independently targetable via <code>scopedAccessSettings</code>, so the binding covers the group's whole Google Cloud session. Both facts are in ADR-006. If you say "fifteen-minute enforced freshness" in a room, you are overclaiming a control the platform cannot deliver. The true sentence is: <em>enforcement is one hour at the platform, evidence is fifteen minutes in the ledger.</em></p>
+<hr />
+<h2 id="1-the-90-second-opener">1. The 90-second opener<a class="headerlink" href="#1-the-90-second-opener" title="Permanent link">&para;</a></h2>
+<p>Use this when asked "walk me through a project."</p>
+<blockquote>
+<p>BankVault is a just-in-time access pattern for a mock mortgage lender. The problem: at most lenders, an underwriter's access to borrower credit reports is standing. It's granted by role and reviewed quarterly. That means a transferred or terminated underwriter can keep read access to SSNs, income docs, and full credit files for up to a quarter, with nobody actively deciding they should have it today. That's a GLBA Safeguards Rule access-control gap.</p>
+<p>BankVault removes the standing grant. There's no role that carries credit-report read. An underwriter requests access to one specific application's file, a lead approves, and Google Cloud Privileged Access Manager issues a grant scoped by IAM Condition to that one object prefix, capped at thirty minutes, and expires it automatically. Every request, granted or denied, is a row in an append-only BigQuery ledger before access goes live.</p>
+<p>What I'd actually want to talk about is the reversals. The project reversed its own architecture twice, and both reversals are documented as ADRs with the trigger condition written down before it fired.</p>
+</blockquote>
+<p>Then stop. Let them pick the thread.</p>
+<hr />
+<h2 id="2-architecture-component-by-component">2. Architecture, component by component<a class="headerlink" href="#2-architecture-component-by-component" title="Permanent link">&para;</a></h2>
+<p>Know why each piece exists, not just what it does. The "why" is where deep dives live.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>What it does</th>
+<th>Why it exists / why this and not something else</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PAM entitlement</strong> (<code>terraform/pam.tf</code>), one per demo application</td>
+<td>Defines who may request (<code>eligible_users</code> = underwriter group), who approves, max duration, and the IAM Condition pinning the granted role to one object prefix</td>
+<td>PAM owns the grant lifecycle natively: request, approval, time-bound activation, auto-expiry. Building that was the original design. ADR-001 named the condition under which building would be wrong, and it fired.</td>
+</tr>
+<tr>
+<td><strong>IAM Condition</strong> <code>resource.name.startsWith("projects/_/buckets/&lt;bucket&gt;/objects/&lt;APP-ID&gt;/")</code></td>
+<td>Object-scope pin</td>
+<td>A grant issued for APP-1001 cannot read APP-1002's file. The literal <code>_</code> is the required GCS CEL resource-name format, not a placeholder.</td>
+</tr>
+<tr>
+<td><strong>Access Context Manager reauth binding</strong>, session length <strong>1h</strong></td>
+<td>Forces reauthentication on the underwriter group's Google Cloud session</td>
+<td>This is where MFA-freshness enforcement actually lives, because a grant's privileges attach to the calling identity and no intermediary can sit in the grant path. One hour is the platform floor, not a choice. It covers the group's whole GCP session because PAM is not targetable via <code>scopedAccessSettings</code>. (ADR-006.)</td>
+</tr>
+<tr>
+<td><strong><code>request_broker</code></strong> (Cloud Function v2, Python 3.12)</td>
+<td>Verifies token freshness, validates the request shape, writes the ledger row. <strong>Does not create grants.</strong></td>
+<td>It is a pre-flight gate and the auditable record of why each request was permitted. It records the <code>auth_time</code> that gated the request, something the platform reauth control enforces but does not surface per request.</td>
+</tr>
+<tr>
+<td><strong>BigQuery <code>access_grants</code> ledger</strong></td>
+<td>Append-only record: REQUEST / GRANT / DENY / EXPIRE_FLAG</td>
+<td>Denials matter as much as grants. A denial with a reason is the evidence that the control fired.</td>
+</tr>
+<tr>
+<td><strong>Log sink to <code>bankvault_platform_logs</code></strong></td>
+<td>Independent export of function logs and PAM admin-activity audit logs</td>
+<td>The application ledger can be wrong if the application has a bug. The platform export cannot be edited by application code. Two independent records is the point.</td>
+</tr>
+<tr>
+<td><strong><code>reconcile</code></strong> (Pub/Sub, <code>*/15</code>)</td>
+<td>Finds GRANT rows past <code>window_end</code> with no close-out row, cross-checks PAM grant state, writes EXPIRE_FLAG and alerts</td>
+<td>It <strong>detects</strong> an overrun. It does not contain one. PAM owns expiry, and a second enforcement path would be a second thing that can be wrong. (ADR-005.)</td>
+</tr>
+<tr>
+<td><strong>GCS bucket</strong></td>
+<td>Uniform bucket-level access, versioned, public access prevention enforced</td>
+<td>Uniform access is required, because object ACLs would let a per-object ACL silently bypass the IAM Condition.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-the-two-reversals-your-strongest-material">3. The two reversals, your strongest material<a class="headerlink" href="#3-the-two-reversals-your-strongest-material" title="Permanent link">&para;</a></h2>
+<p>Most portfolio projects show a design. This one shows judgment under new information. Lead with it.</p>
+<h3 id="reversal-1-adr-001-build-vs-buy">Reversal 1: ADR-001, build vs. buy<a class="headerlink" href="#reversal-1-adr-001-build-vs-buy" title="Permanent link">&para;</a></h3>
+<p>The first cut was a custom broker: one function applied a conditional IAM binding, a second stripped it on a schedule. ADR-001 wrote down the exact condition that would make that wrong: <em>Google ships a managed grant lifecycle that does this natively.</em> PAM reached GA with time-bound grants, an approval workflow, and IAM-Condition support. The custom <code>revoke_access</code> function existed only to undo something PAM now undoes itself, so it was deleted rather than defended.</p>
+<p><strong>Say this:</strong> "The ADR was written so the trigger was legible before it fired. That's the part I'd want you to look at. Not that I picked right the first time, but that I wrote down what would make me wrong."</p>
+<h3 id="reversal-2-adr-006-who-requests-the-grant">Reversal 2: ADR-006, who requests the grant<a class="headerlink" href="#reversal-2-adr-006-who-requests-the-grant" title="Permanent link">&para;</a></h3>
+<p>The design assumed the broker could sit in front of PAM: verify freshness, then mint the grant on the underwriter's behalf. Reading the PAM grant model closed that off. Google's documentation is explicit: when a group is a requester on an entitlement, every member can request a grant, but <strong>only the individual account that requests the grant receives the elevated privileges.</strong> There is no grantee or on-behalf-of field on <code>CreateGrant</code>. Privileges attach to the caller.</p>
+<p>So a broker-mediated design would have granted credit-report read to a shared, always-on service account. That inverts the entire thesis of the project.</p>
+<p><strong>Say this:</strong> "The broker-mediated design would have created exactly the standing access the project exists to remove, held by a service account instead of a person, which is worse, because nobody reviews a service account quarterly. Freshness moved to the platform layer PAM does respect, and the broker kept the job it can actually do: recording why each request was allowed."</p>
+<p>This is the answer to "tell me about a time you were wrong." It's also the answer to "how do you validate assumptions?" You read the platform's grant model instead of assuming it works like every other API.</p>
+<hr />
+<h2 id="4-killer-questions-with-answers">4. Killer questions, with answers<a class="headerlink" href="#4-killer-questions-with-answers" title="Permanent link">&para;</a></h2>
+<p>Rehearse these. The first four are the ones that end interviews if you fumble them.</p>
+<p><strong>Q: What stops the underwriter from bypassing your broker and calling PAM directly?</strong>
+Nothing at the application layer, and that's why the freshness control can't live in the broker. The underwriter is the eligible principal on the entitlement. They <em>have</em> to be, because PAM grants privileges to the caller. So freshness is enforced by an Access Context Manager reauthentication policy on the access level covering the PAM request path. The broker is a pre-flight gate and the per-request audit record, not a chokepoint. Claiming otherwise would be claiming a control I don't have.</p>
+<p><strong>Q: If PAM does approval, scoping, and expiry, what does your code actually add?</strong>
+Three things PAM doesn't do. First, a per-request record of the <code>auth_time</code> that gated the request. ACM enforces recency but doesn't write it into a queryable ledger tied to a specific credit-report read. Second, request-shape validation: domain, justification-required, duration cap, application-id membership. Third, denials. PAM logs grants. The ledger logs the requests that never became grants, which is the evidence an examiner asks for when they want to know whether the control ever fired.</p>
+<p><strong>Q: Why MFA freshness instead of session validity?</strong>
+A valid session says this person authenticated at some point in the allowed window. It doesn't say they're at the keyboard now. Between a morning login and an afternoon credit-report read sits an unlocked laptop, a hijacked session, a token lifted off a compromised host. For a normal read, session validity is a reasonable bar. For a privileged read of consumer financial data, recency is the more useful signal.</p>
+<p><strong>Q: Why isn't freshness just an IAM Condition on the entitlement?</strong>
+Because IAM Conditions have no authentication-recency attribute. They expose request time, resource attributes, and similar, but not "how recently did this principal complete MFA." Asserting a CEL clause for it would be fabricating a capability. That's why the enforcement has to sit at a layer that can see the authentication event.</p>
+<p><strong>Q: One entitlement per loan application doesn't scale. What happens at 10,000 applications?</strong>
+Correct, and it's a documented limitation, not something I'd defend. It's a consequence of the IAM Condition being static per entitlement. The condition string is fixed at entitlement creation, so per-object scope forces per-object entitlements. Two paths out: check whether <code>CreateGrant</code>'s optional requested-resource scoping reaches object granularity, which would collapse this to one entitlement; or move the scope boundary up from per-application to per-portfolio or per-branch and accept coarser blast radius in exchange for a manageable entitlement count. I'd want production access patterns before picking.</p>
+<p><strong>Q: How do you know <code>approved_by</code> in your ledger is real?</strong>
+In the current build, I don't. It's a field in the request body, so the ledger column is a <em>claimed</em> approver. The real approval evidence is PAM's approval workflow and its admin-activity audit logs, which are exported to the platform-log dataset. That's what the SOX mapping should point at, not the application ledger field. It's the kind of thing that looks fine until an auditor asks "who attests to this column."</p>
+<p><strong>Q: What's the blast radius if the broker service account is compromised?</strong>
+Small, by design and by accident of ADR-006. The broker has PAM viewer and BigQuery jobUser. It cannot create a grant, cannot read the credit-reports bucket, and cannot delete ledger rows. The worst case is falsified or suppressed ledger entries, which is exactly why the platform log export exists as an independent record that application code cannot touch.</p>
+<p><strong>Q: Your ledger is "append-only." Enforced how?</strong>
+By the write path and the SA's permissions, not by a BigQuery feature. BigQuery tables aren't immutable by default. The honest statement is "append-only by convention and least privilege, with an independent platform-log export as the tamper-evidence layer." If you needed genuine immutability you'd add a table-level retention policy or write to a WORM-backed sink. I'd flag that as the next hardening step rather than claim it's already there.</p>
+<p><strong>Q: What happens when the identity provider is down?</strong>
+Access is denied. That's deliberate and it has a real cost. A loan decision with an SLA doesn't stop having one because Okta is down. I took the trade because an identity control that keeps granting when it can't verify who's asking has a bypass, and the bypass opens under exactly the conditions an attacker wants: the IdP degraded, checks failing open, nobody watching. If a specific SLA can't tolerate it, the answer is a documented, alerted break-glass path, not a control that quietly fails open.</p>
+<p><strong>Q: Why does reconcile only detect and not revoke?</strong>
+Because PAM owns expiry, and a second thing that revokes access is a second thing that can revoke it wrongly. Reconcile is a completeness check: if a grant is past its window and PAM still reports it active, that's a platform-level anomaly worth an alert, not something my code should race to fix. The precise claim is "detected within roughly one reconcile interval," not "contained within." Those are different sentences and I only get to say the first one.</p>
+<p><strong>Q: Why GCS objects rather than a database row?</strong>
+Because object-prefix scoping is where the IAM Condition actually has purchase. A row-level equivalent would need the database's own authorization layer, and then IAM is no longer the enforcement point. Choosing the resource where the platform's native control is strongest was deliberate (ADR-003).</p>
+<p><strong>Q: How is this different from short-lived credentials or <code>gcloud auth print-access-token</code>?</strong>
+Short-lived credentials shorten the window on privileges you already hold. This removes the privilege until it's requested, approved, and scoped to one object. Different control: one bounds exposure time on standing access, the other eliminates the standing access.</p>
+<p><strong>Q: How did you test any of this without deploying?</strong>
+<code>terraform fmt</code>, <code>init -backend=false</code>, and <code>validate</code> for the configuration; pytest with every GCP client mocked for the Python. That verifies logic and syntax, not behavior against live GCP. I've been explicit in the README that this is a reference architecture, not a deployed system, and the untested boundary is the PAM API call itself. I'd rather say that than let someone assume I've run it in production.</p>
+<p><strong>Q: What's the weakest part?</strong>
+Two things. The signature-verification stub: the broker reads a token's <code>auth_time</code> claim without verifying the signature against a live JWKS endpoint, so in this build the freshness claim is only as trustworthy as the caller. And the entitlement-per-application scaling ceiling. Both are in the README under "What this isn't," because a reviewer finding them there thinks differently about me than a reviewer finding them in the code.</p>
+<hr />
+<h2 id="5-compliance-mapping-where-to-be-careful">5. Compliance mapping: where to be careful<a class="headerlink" href="#5-compliance-mapping-where-to-be-careful" title="Permanent link">&para;</a></h2>
+<p>The mapping is strong because it separates explicit from interpretive claims. Three specific exposures.</p>
+<p>PCI DSS is your weakest framework claim. PCI scope is cardholder data and sensitive authentication data in the cardholder data environment. A borrower credit report is not cardholder data. The phrase "cardholder-adjacent PII" isn't a PCI concept and a QSA will say so. Reframe the claim at the pattern level: <em>"Requirement 7 defines the least-privilege access-control model; BankVault implements that model, and it would satisfy 7.2/7.3 if the protected object were in a CDE. The regulated data here is GLBA-scoped, not PCI-scoped."</em> That's a stronger position than the current one because you're the one naming the limit.</p>
+<p>SOX 404 needs a scope sentence. SOX ITGCs apply where access affects financial reporting. Loan-origination read access isn't automatically in scope. Say "for a public lender where this data feeds financial reporting" rather than asserting it flatly.</p>
+<p>GLBA is your solid ground. 16 CFR 314.4(c)(1) requires access controls limiting customer information to authorized users. A credit report is customer financial information. Lead with GLBA and treat the others as pattern applicability.</p>
+<p>Also: after ADR-006 the mapping rows citing <code>request_broker/main.py</code> for provisioning and segregation of duties are stale. Provisioning is <code>pam.tf</code>. SoD evidence is the PAM approval workflow and its audit logs. Fix before anyone reads it.</p>
+<hr />
+<h2 id="6-sentences-you-must-not-say">6. Sentences you must not say<a class="headerlink" href="#6-sentences-you-must-not-say" title="Permanent link">&para;</a></h2>
+<ul>
+<li>"It's deployed." It isn't. <code>terraform validate</code> and pytest are not deployment.</li>
+<li>"It's production-ready." No VPC Service Controls, no CMEK, no DLP, no alerting pipeline.</li>
+<li>"It verifies the token." It decodes claims. Signature verification is a stub.</li>
+<li>"Reconcile contains overruns." It detects them.</li>
+<li>"The bank has zero-trust access." One flow, one actor, one data class. ADR-003 exists precisely so you say the narrow thing.</li>
+<li>"I built a PAM broker." After ADR-006 you built a pre-flight gate and an audit ledger. The smaller claim is the true one and it survives follow-up questions.</li>
+</ul>
+<hr />
+<h2 id="7-pre-interview-checklist">7. Pre-interview checklist<a class="headerlink" href="#7-pre-interview-checklist" title="Permanent link">&para;</a></h2>
+<p>Do not schedule the deep dive until these are true:</p>
+<ul>
+<li>[x] <code>_create_pam_grant</code> removed from <code>request_broker</code>; ADR-006 committed</li>
+<li>[x] README corrected: stale <code>300s</code> gone, mermaid diagram drawn from the actual Terraform, enforcement/evidence split stated</li>
+<li>[x] Controls mapping updated for ADR-006 (periodic-review, provisioning, SoD rows repointed at <code>pam.tf</code> and the PAM audit-log export)</li>
+<li>[x] Project <code>CLAUDE.md</code> updated so a future agent does not "helpfully" restore grant creation</li>
+<li>[ ] <code>auth_time</code> body branch deleted from <code>_extract_auth_time</code>; <code>id_token</code> required</li>
+<li>[ ] <code>requested_by</code> derived from token claims</li>
+<li>[ ] <code>_verify_signature()</code> present as an explicit <code>NotImplementedError</code> seam</li>
+<li>[ ] demo curl in README uses <code>id_token</code> rather than a raw <code>auth_time</code></li>
+<li>[ ] <code>approved_by</code> renamed <code>claimed_approver</code>; SOX mapping repointed to PAM audit logs</li>
+<li>[ ] ACM reauth binding expressed in Terraform (currently documented only, not provisioned)</li>
+<li>[ ] PCI section reframed at pattern level</li>
+<li>[ ] Terraform <code>validation</code> block enforcing <code>approver_group != underwriter_group</code></li>
+<li>[ ] Invoker IAM binding present in Terraform</li>
+<li>[ ] <code>checkov</code> and <code>gitleaks</code> in CI</li>
+</ul>
+<p>The last three are ten minutes each. The first six are the interview.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
