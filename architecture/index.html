@@ -902,10 +902,10 @@ credit-reports bucket (GCS)
 <p>It exists for two things the expiry path does not give you:</p>
 <ul>
 <li>
-<p><strong>Ledger completeness.</strong> The <code>access_grants</code> ledger is the SOX 404 evidence artifact. The reconcile job confirms every GRANT row whose <code>window_end</code> has passed has a corresponding close-out (an EXPIRE row), and writes one if the lifecycle event was never recorded. Without it, a function crash between grant and expiry could leave a grant that looks perpetually open in the ledger even though PAM expired it.</p>
+<p><strong>Ledger completeness.</strong> The <code>access_grants</code> ledger is the SOX 404 evidence artifact. The broker writes no GRANT row (ADR-006), so the reconcile job reconstructs each grant from the PAM <code>CreateGrant</code> admin-activity audit events exported to <code>bankvault_platform_logs</code>, confirms every grant whose <code>window_end</code> has passed has a corresponding close-out, and writes an EXPIRE_FLAG row if the lifecycle event was never recorded. Without it, a grant could look perpetually open even though PAM expired it.</p>
 </li>
 <li>
-<p><strong>Anomaly detection.</strong> It cross-checks the ledger against live PAM grant state and flags a grant that PAM still reports active past its <code>window_end</code>, or an IAM binding on the bucket that no ledger row explains.</p>
+<p><strong>Anomaly detection.</strong> It cross-checks the reconstructed grants against live PAM grant state and flags a grant that PAM still reports active past its <code>window_end</code>, or an IAM binding on the bucket that no ledger row explains.</p>
 </li>
 </ul>
 <p>What it does <strong>not</strong> do is revoke. It writes an <code>EXPIRE_FLAG</code> row and emits a structured alert log. So the defensible claim is "an overrun is detected within roughly one reconcile interval (15 minutes)," not "contained within 15 minutes." Those are different sentences and only one of them is true. If you need containment rather than detection, the next step is wiring the flag to an automated PAM grant revocation, and that is a deliberate future decision, not an accident of the current build (ADR-005).</p>
@@ -940,7 +940,7 @@ credit-reports bucket (GCS)
 <tr>
 <td>Broker → PAM</td>
 <td>Broker SA, narrowly</td>
-<td>SA may create grants only on the one entitlement</td>
+<td>SA holds PAM viewer only; it cannot create grants (ADR-006)</td>
 </tr>
 <tr>
 <td>PAM → bucket</td>
