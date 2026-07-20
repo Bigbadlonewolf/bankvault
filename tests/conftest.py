@@ -39,6 +39,7 @@ def cfg():
         "location": "global",
         "audit_dataset": "bankvault_audit",
         "ledger_table": "access_grants",
+        "platform_dataset": "bankvault_platform_logs",
         "credit_bucket": "test-credit-reports",
         "allowed_domain": "lender.example.com",
         "max_auth_age_seconds": 900,
