@@ -722,7 +722,7 @@
 
 
 <h1 id="bankvault">BankVault<a class="headerlink" href="#bankvault" title="Permanent link">&para;</a></h1>
-<p>Just-in-time privilege elevation for a mock mortgage lender's loan-origination pipeline. No underwriter holds standing access to borrower credit reports. Each read is a time-bound, object-scoped grant, gated on a fresh multi-factor login, issued through Google Cloud Privileged Access Manager, and written to an append-only BigQuery ledger before it goes live.</p>
+<p>Just-in-time privilege elevation for a mock mortgage lender's loan-origination pipeline. No underwriter holds standing access to borrower credit reports. Each approved request yields a time-bound grant scoped to one application's prefix, gated on a fresh multi-factor login, issued through Google Cloud Privileged Access Manager, and recorded in an append-only BigQuery ledger.</p>
 <p>This site documents the architecture and the decisions behind it. The code lives at <a href="https://github.com/Bigbadlonewolf/bankvault">github.com/Bigbadlonewolf/bankvault</a>.</p>
 <h2 id="start-here">Start here<a class="headerlink" href="#start-here" title="Permanent link">&para;</a></h2>
 <ul>
@@ -737,6 +737,7 @@
 <li><strong><a href="adr/003-scope-and-actor-definition/">ADR-003: Scope and actor definition</a></strong> — one underwriter, one credit report, and the GLBA Safeguards Rule basis for both.</li>
 <li><strong><a href="adr/004-mfa-freshness-zero-trust-signal/">ADR-004: MFA freshness as the signal, not session validity</a></strong> — why the broker checks <code>auth_time</code>, and where that check actually runs.</li>
 <li><strong><a href="adr/005-pam-grant-lifecycle/">ADR-005: Grant lifecycle, and why reconciliation detects instead of contains</a></strong> — PAM owns expiry; the sweep is a completeness check, and the honest claim is "detected," not "contained."</li>
+<li><strong><a href="adr/006-who-requests-the-grant/">ADR-006: The broker cannot request the grant</a></strong> — PAM elevates the calling principal, so the broker stopped creating grants; the underwriter requests their own, and reconcile reconstructs the grant record from PAM's audit logs.</li>
 </ul>
 
 
