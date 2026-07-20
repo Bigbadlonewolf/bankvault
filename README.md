@@ -1,6 +1,6 @@
 # BankVault
 
-Just-in-time privilege elevation for a mock mortgage lender's loan-origination pipeline. No underwriter holds standing access to borrower credit reports. Each read is a time-bound, object-scoped grant, gated on a fresh multi-factor login, issued through Google Cloud **Privileged Access Manager (PAM)**, and written to an append-only BigQuery ledger before it goes live.
+Just-in-time privilege elevation for a mock mortgage lender's loan-origination pipeline. No underwriter holds standing access to borrower credit reports. Each approved request yields a time-bound grant scoped to one application's prefix, gated on a fresh multi-factor login, issued through Google Cloud **Privileged Access Manager (PAM)**, and recorded in an append-only BigQuery ledger.
 
 > **Status:** reference architecture. This repo is Terraform + Python + docs, verified with `terraform validate` and `pytest`. It is not a deployed GCP project. See [What this isn't](#what-this-isnt).
 
@@ -107,7 +107,7 @@ bankvault/
 │   ├── outputs.tf
 │   └── terraform.tfvars.example
 ├── functions/
-│   ├── request_broker/main.py     # MFA-freshness gate + validation + PAM grant + ledger write
+│   ├── request_broker/main.py     # MFA-freshness gate + validation + ledger write (no grant creation, ADR-006)
 │   └── reconcile/main.py          # detect-only overrun sweep
 ├── tests/                         # pytest, all GCP + IdP clients mocked, no network
 ├── scripts/run-local.sh           # serve either function via functions-framework
@@ -115,7 +115,7 @@ bankvault/
 │   ├── index.md
 │   ├── architecture.md
 │   ├── controls-mapping.md        # GLBA / PCI DSS v4.0 / SOX 404 / FFIEC → specific resources
-│   └── adr/001..005
+│   └── adr/001..006
 └── mkdocs.yml
 ```
 
