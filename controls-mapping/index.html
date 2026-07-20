@@ -848,7 +848,7 @@
 <tr>
 <td>7.2.5 — least privilege for system/application accounts</td>
 <td>Explicit</td>
-<td>Broker SA may create grants only on one entitlement; reconcile SA is read-only plus EXPIRE_FLAG writes. <code>terraform/iam.tf</code></td>
+<td>Broker SA holds PAM viewer only and cannot create grants; grant-creation eligibility sits with the underwriter group on the entitlement (ADR-006). Reconcile SA is read-only plus EXPIRE_FLAG writes. <code>terraform/iam.tf</code></td>
 </tr>
 <tr>
 <td>7.3.1 / 7.3.2 — access enforced by an access-control system, by need-to-know</td>
