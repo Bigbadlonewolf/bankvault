@@ -55,7 +55,7 @@ Say it as two sentences that are both true, rather than one that is convenient: 
 
 **`approved_by` is a claim, not evidence.** It arrives in the request body. Real approval evidence is PAM's approval workflow and its admin-activity audit logs. The compliance mapping should point at those, not at the ledger column.
 
-**The GRANT ledger row changes meaning.** The broker no longer observes a grant being created, so it cannot write `pam_grant_name`. It writes a `REQUEST` row recording that a request passed pre-flight. Grant creation and expiry are reconstructed from the PAM audit logs in `bankvault_platform_logs`, joined on requester and application. `reconcile` already cross-checks live PAM grant state and is unaffected.
+**The GRANT ledger row changes meaning.** The broker no longer observes a grant being created, so it cannot write `pam_grant_name`. It writes a `REQUEST` row recording that a request passed pre-flight. Grant creation is instead reconstructed from the PAM `CreateGrant` admin-activity audit events exported to `bankvault_platform_logs`. `reconcile` is not unaffected: it now rebuilds grant windows from those audit events — the requester, the entitlement (which encodes the application), and the grant's expiry — and sweeps them for close-out, because the ledger has no GRANT rows for it to read. It still reads any legacy ledger GRANT rows too, so the sweep is correct under either shape.
 
 ## Alternatives considered
 
