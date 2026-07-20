@@ -1,13 +1,25 @@
 """BankVault request broker.
 
-One HTTP entry point. It does the one job GCP Privileged Access Manager does not:
-refuse to create a grant when the underwriter's login is not fresh (ADR-004). Then
-it validates the request, asks PAM to create the object-scoped grant, and writes the
-outcome to the append-only ledger. PAM owns approval and expiry (ADR-001); nothing
-here revokes anything.
+One HTTP entry point. It is a pre-flight gate and an audit record. It is **not** a
+chokepoint, and it does not create grants (ADR-006).
 
-The GCP calls sit behind small seams (`_bq_client`, `_create_pam_grant`) so the
-validation and freshness logic is unit-tested without touching the network.
+PAM attaches a grant's privileges to the calling principal, and there is no grantee
+parameter on `CreateGrant`. A broker that called PAM would therefore elevate its own
+service account, not the underwriter, which is the standing access this project exists
+to remove. So the underwriter requests their own grant directly against the entitlement
+this broker names back to them.
+
+What it does:
+  - refuses stale-login and malformed requests before they reach PAM, with a reason
+  - writes the `auth_time` that gated each request into the append-only ledger
+
+Enforced recency is an Access Context Manager reauth binding at the platform's one-hour
+minimum. The 15-minute check here is early rejection and evidence, not enforcement; an
+underwriter who skips this endpoint reaches PAM anyway (ADR-006).
+
+PAM owns approval and expiry (ADR-001); nothing here revokes anything. The BigQuery call
+sits behind a seam (`_bq_client`) so validation and freshness logic is unit-tested without
+touching the network.
 """
 
 from __future__ import annotations
@@ -152,26 +164,6 @@ def _bq_client():  # pragma: no cover - thin wrapper
     return bigquery.Client()
 
 
-def _create_pam_grant(entitlement_name: str, justification: str, duration_seconds: int) -> str:
-    """Create a PAM grant against the object-scoped entitlement.
-
-    VERIFY BEFORE DEPLOY (ADR-001): the exact grant-request API, and whether a broker
-    service account can request a grant whose grantee is the underwriter, must be
-    confirmed against the current PAM API. This repo pins scope on the entitlement, so
-    the grant request itself only supplies duration and justification.
-    """
-    # pragma: no cover - real API call, exercised only against a live project
-    from google.cloud import privilegedaccessmanager_v1
-
-    client = privilegedaccessmanager_v1.PrivilegedAccessManagerClient()
-    grant = privilegedaccessmanager_v1.Grant(
-        requested_duration={"seconds": duration_seconds},
-        justification={"unstructured_justification": justification},
-    )
-    created = client.create_grant(parent=entitlement_name, grant=grant)
-    return created.name
-
-
 def _write_ledger_row(cfg: dict, row: dict) -> None:
     client = _bq_client()
     table = f"{cfg['project_id']}.{cfg['audit_dataset']}.{cfg['ledger_table']}"
@@ -216,29 +208,33 @@ def process(payload: dict, cfg: dict | None = None) -> dict:
     resource_path = (
         f"projects/_/buckets/{cfg['credit_bucket']}/objects/{req['application_id']}/"
     )
-    window_end = int(time.time()) + req["duration_seconds"]
 
-    grant_name = _create_pam_grant(entitlement_name, req["justification"], req["duration_seconds"])
-
+    # A REQUEST row, not a GRANT row. This broker never observes a grant being created,
+    # so it must not claim one exists (ADR-006). The underwriter requests the grant
+    # themselves against `entitlement_name`; PAM's admin-activity audit logs, exported to
+    # bankvault_platform_logs, are the record that a grant was actually issued.
     _write_ledger_row(cfg, {
         **base,
-        "action_type": "GRANT",
+        "action_type": "REQUEST",
         "approved_by": req["approved_by"],
         "application_id": req["application_id"],
         "resource_path": resource_path,
         "justification": req["justification"],
         "duration_seconds": req["duration_seconds"],
-        "window_end": _iso_from_epoch(window_end),
         "mfa_auth_time": _iso_from_epoch(auth_time),
-        "pam_grant_name": grant_name,
+        "entitlement_name": entitlement_name,
     })
 
     return {
-        "status": "granted",
+        "status": "cleared_to_request",
         "request_id": request_id,
-        "pam_grant_name": grant_name,
+        "entitlement_name": entitlement_name,
         "resource_path": resource_path,
-        "window_end": _iso_from_epoch(window_end),
+        "requested_duration_seconds": req["duration_seconds"],
+        "note": (
+            "Pre-flight checks passed and the request is recorded. Request the grant "
+            "yourself against entitlement_name; PAM grants privileges to the caller."
+        ),
     }
 
 
@@ -246,5 +242,5 @@ def process(payload: dict, cfg: dict | None = None) -> dict:
 def handle_request(request):
     payload = request.get_json(silent=True) or {}
     result = process(payload)
-    code = 200 if result["status"] == "granted" else 403
+    code = 200 if result["status"] == "cleared_to_request" else 403
     return (json.dumps(result), code, {"Content-Type": "application/json"})

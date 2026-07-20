@@ -34,9 +34,10 @@ resource "google_bigquery_table" "access_grants" {
     { name = "justification", type = "STRING", mode = "NULLABLE", description = "Requester's written reason." },
     { name = "duration_seconds", type = "INTEGER", mode = "NULLABLE", description = "Requested grant duration." },
     { name = "window_end", type = "TIMESTAMP", mode = "NULLABLE", description = "When the grant is expected to expire." },
-    { name = "mfa_auth_time", type = "TIMESTAMP", mode = "NULLABLE", description = "IdP auth_time that gated the grant (ADR-004)." },
+    { name = "mfa_auth_time", type = "TIMESTAMP", mode = "NULLABLE", description = "IdP auth_time recorded at pre-flight. Evidence at 15 minutes; enforcement is the ACM reauth binding at 1 hour (ADR-004, ADR-006)." },
     { name = "decision_reason", type = "STRING", mode = "NULLABLE", description = "Why a request was denied, or a flag was raised." },
-    { name = "pam_grant_name", type = "STRING", mode = "NULLABLE", description = "PAM grant resource name, when one was created." },
+    { name = "entitlement_name", type = "STRING", mode = "NULLABLE", description = "PAM entitlement the cleared request should be made against. Written on REQUEST rows by the broker (ADR-006)." },
+    { name = "pam_grant_name", type = "STRING", mode = "NULLABLE", description = "PAM grant resource name. The broker never sets this; it does not create grants (ADR-006). Populated by reconcile from PAM grant state." },
   ])
 
   labels = local.common_labels
