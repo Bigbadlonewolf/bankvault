@@ -16,5 +16,5 @@ project_id = "your-gcp-project-id"
 # demo_application_ids = ["APP-1001", "APP-1002"]
 
 # max_grant_minutes    = 30   # PAM caps and expires the grant at this bound
-# max_auth_age_seconds = 300  # login must be fresher than this (ADR-004)
+# max_auth_age_seconds = 900  # login must be fresher than this at the broker pre-flight check (ADR-004; evidence, not enforcement — see ADR-006)
 # reconcile_schedule   = "*/15 * * * *"

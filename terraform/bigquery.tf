@@ -72,3 +72,13 @@ resource "google_bigquery_dataset_iam_member" "reconcile_audit_editor" {
   role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${google_service_account.reconcile.email}"
 }
+
+# Reconcile reconstructs grants from the PAM audit logs the sink writes to this
+# dataset (ADR-006), so it needs read access. It never writes here; the platform
+# export stays an independent record application code cannot alter.
+resource "google_bigquery_dataset_iam_member" "reconcile_platform_reader" {
+  dataset_id = google_bigquery_dataset.platform_logs.dataset_id
+  project    = var.project_id
+  role       = "roles/bigquery.dataViewer"
+  member     = "serviceAccount:${google_service_account.reconcile.email}"
+}

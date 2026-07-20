@@ -52,7 +52,7 @@ variable "max_grant_minutes" {
 
 variable "max_auth_age_seconds" {
   type        = number
-  description = "How fresh the underwriter's login must be, in seconds, for the broker to create a grant (ADR-004). Passed to request_broker."
+  description = "How fresh the underwriter's login must be, in seconds, to pass the broker's pre-flight check (ADR-004). Evidence and early rejection only — the broker creates no grants and this is not the enforcement point (ADR-006)."
   default     = 900
 }
 

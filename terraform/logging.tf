@@ -29,3 +29,18 @@ resource "google_bigquery_dataset_iam_member" "sink_writer" {
   role       = "roles/bigquery.dataEditor"
   member     = google_logging_project_sink.platform.writer_identity
 }
+
+# Close the in-window observation gap. PAM logs that a grant was issued, but without a
+# DATA_READ audit config the reads an underwriter makes under that grant are not
+# recorded anywhere. Enabling DATA_READ for Cloud Storage routes every object read
+# inside the grant window into Cloud Logging and the platform export, so what happens
+# during the 30 minutes is observed, not just that the grant existed
+# (docs/interview-defense.md).
+resource "google_project_iam_audit_config" "storage_data_read" {
+  project = var.project_id
+  service = "storage.googleapis.com"
+
+  audit_log_config {
+    log_type = "DATA_READ"
+  }
+}

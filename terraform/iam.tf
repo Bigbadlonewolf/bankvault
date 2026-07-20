@@ -47,3 +47,14 @@ resource "google_project_iam_member" "reconcile_bq_job" {
   role    = "roles/bigquery.jobUser"
   member  = "serviceAccount:${google_service_account.reconcile.email}"
 }
+
+# Dedicated identity allowed to invoke the broker over its internal endpoint. The
+# broker is a skippable pre-flight gate (ADR-006), so invocation is not a privilege
+# boundary; this SA exists so the internal caller is explicit and least-privilege
+# rather than an implicit project-wide grant.
+resource "google_service_account" "broker_invoker" {
+  account_id   = "bankvault-broker-invoker"
+  display_name = "BankVault broker invoker"
+  description  = "Internal caller permitted to invoke the request_broker function (roles/run.invoker)."
+  project      = var.project_id
+}

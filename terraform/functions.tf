@@ -71,6 +71,19 @@ resource "google_cloudfunctions2_function" "request_broker" {
   depends_on = [google_project_service.enabled]
 }
 
+# Who may invoke the broker. The function is internal-only (ALLOW_INTERNAL_ONLY) and
+# a skippable pre-flight gate rather than a chokepoint (ADR-006), so invocation is not
+# the privilege boundary. This grants run.invoker to one dedicated identity and nothing
+# else, making the permitted internal caller explicit instead of an implicit
+# project-level grant.
+resource "google_cloud_run_service_iam_member" "broker_invoker" {
+  project  = var.project_id
+  location = google_cloudfunctions2_function.request_broker.location
+  service  = google_cloudfunctions2_function.request_broker.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.broker_invoker.email}"
+}
+
 resource "google_cloudfunctions2_function" "reconcile" {
   name     = "bankvault-reconcile"
   location = var.region
@@ -94,11 +107,13 @@ resource "google_cloudfunctions2_function" "reconcile" {
     service_account_email = google_service_account.reconcile.email
 
     environment_variables = {
-      PROJECT_ID    = var.project_id
-      LOCATION      = "global"
-      AUDIT_DATASET = google_bigquery_dataset.audit.dataset_id
-      LEDGER_TABLE  = google_bigquery_table.access_grants.table_id
-      CREDIT_BUCKET = local.credit_reports_bucket
+      PROJECT_ID         = var.project_id
+      LOCATION           = "global"
+      AUDIT_DATASET      = google_bigquery_dataset.audit.dataset_id
+      LEDGER_TABLE       = google_bigquery_table.access_grants.table_id
+      PLATFORM_DATASET   = google_bigquery_dataset.platform_logs.dataset_id
+      CREDIT_BUCKET      = local.credit_reports_bucket
+      ENTITLEMENT_PREFIX = local.entitlement_prefix
     }
   }
 
