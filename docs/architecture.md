@@ -5,40 +5,51 @@ BankVault is one narrow flow done carefully: one actor, one resource, one regula
 ## The request path, field by field
 
 ```
-Underwriter
-    │  POST /request
-    │  { requested_by, approved_by, application_id, justification, id_token }
+Access Context Manager reauth binding on the underwriter group
+    session length 1h (platform floor: 0s, or 1h-24h, nothing between).
+    THIS is the enforced recency control. It covers the group's whole
+    Google Cloud session, because PAM is not independently targetable
+    by a scopedAccessSettings binding. See ADR-006.
+    │
     ▼
-request_broker (Cloud Function v2, HTTP, Python 3.12)
-    ├── verify_mfa_freshness(id_token)
-    │       decode the OIDC token, read auth_time, reject if
-    │       now - auth_time > max_auth_age_seconds (default 300).
-    │       This is a broker-side check against the identity provider,
-    │       NOT an IAM Condition. GCP IAM has no "how recently did this
-    │       principal MFA" attribute. See ADR-004.
+Underwriter
     │
-    ├── validate_request()
-    │       requested_by and approved_by share the allowed domain,
-    │       requested_by != approved_by (segregation of duties),
-    │       duration_minutes <= max_grant_minutes,
-    │       application_id matches the known-application pattern.
-    │       Any failure writes a DENY row and returns before any PAM call.
+    ├─ (optional) POST /request ─────────────────────────────┐
+    │  { requested_by, approved_by, application_id,          │
+    │    justification, id_token }                           │
+    │                                                        ▼
+    │                        request_broker (Cloud Function v2, HTTP, Python 3.12)
+    │                            ├── verify_mfa_freshness(id_token)
+    │                            │       decode the OIDC token, read auth_time, reject if
+    │                            │       now - auth_time > max_auth_age_seconds (default 900).
+    │                            │       NOT enforcement. The broker is skippable, so this is
+    │                            │       early rejection plus the auth_time the ledger records.
+    │                            │       Also NOT an IAM Condition: GCP IAM has no "how recently
+    │                            │       did this principal MFA" attribute. See ADR-004, ADR-006.
+    │                            │
+    │                            ├── validate_request()
+    │                            │       requested_by and approved_by share the allowed domain,
+    │                            │       requested_by != approved_by (segregation of duties),
+    │                            │       duration_minutes <= max_grant_minutes,
+    │                            │       application_id matches the known-application pattern.
+    │                            │
+    │                            └── write_ledger_row()
+    │                                    REQUEST (cleared pre-flight, entitlement named back
+    │                                    to the caller) or DENY (rejected, with reason).
+    │                                    Never GRANT: this function does not create grants
+    │                                    and never observes one being created.
     │
-    ├── create_pam_grant()
-    │       call PAM grants.create against the entitlement
-    │       bankvault-credit-report-read. The entitlement (provisioned by
-    │       Terraform, not by this function) already carries:
-    │         - role: roles/storage.objectViewer
-    │         - the IAM Condition pinning object path + expiry
-    │         - the max-duration cap
-    │         - the approval requirement
-    │       The function passes justification and the resolved object
-    │       prefix; PAM handles approval routing and, on approval,
-    │       activates the conditioned grant.
-    │
-    └── write_ledger_row()
-            INSERT one row into BigQuery access_grants for every outcome:
-            REQUEST (received), GRANT (PAM grant created), or DENY (rejected).
+    ▼
+grants.create — called by the UNDERWRITER, as themselves
+    PAM attaches a grant's privileges to the calling principal and CreateGrant has
+    no grantee parameter, so no intermediary can request on their behalf (ADR-006).
+    ▼
+PAM entitlement: bankvault-credit-report-<application_id>
+    provisioned by Terraform, one per application, already carrying:
+      - role: roles/storage.objectViewer
+      - the IAM Condition pinning the object prefix (static per entitlement)
+      - max_request_duration (the cap PAM expires the grant at)
+      - the approval requirement (one approver + justification)
     ▼
 credit-reports bucket (GCS)
     uniform bucket-level access, object versioning on,
@@ -82,7 +93,11 @@ See [Compliance coverage](controls-mapping.md) for how each piece maps to a spec
 
 Underwriters and approvers resolve through Workforce Identity Federation, not a second cloud-local directory. A leaver disabled in the corporate IdP loses BankVault eligibility with them, because there is no parallel Cloud Identity account to forget about. That decision, and the one directory it deliberately rules out, is ADR-002.
 
-The broker does not trust a session token merely because it is unexpired. It reads `auth_time` and requires a login fresh within `max_auth_age_seconds`. Access Context Manager reauthentication session controls are the defense-in-depth layer behind that broker check; the broker check is the one this repo implements. ADR-004 covers why freshness, not mere validity, is the signal that matters for a privileged read.
+Recency, not mere session validity, is the signal that matters for a privileged read. ADR-004 covers why. ADR-006 corrects where it is enforced, and the correction matters because the earlier version of this paragraph had the layers the wrong way round.
+
+**Access Context Manager reauthentication session controls are the enforcement.** A binding on the underwriter group sets a session length of one hour, which is the platform's floor rather than a tuned value: `--session-length` accepts `0s` or a duration between 1 hour and 24 hours. Because PAM is not documented as an independently targetable application for `scopedAccessSettings`, that binding covers the group's entire Google Cloud session and not just the credit-report path. Broad blast radius, real enforcement.
+
+**The broker's 900-second check is evidence, not enforcement.** It reads `auth_time` and refuses anything staler than fifteen minutes, which rejects bad requests early and puts a tighter number in the ledger than the platform bound. It cannot be enforcement, because an underwriter who never calls the broker still reaches PAM. Whether a raw REST call to the PAM API is covered by a console-scoped ACM binding is `[verify against current GCP docs]`; the unnarrowed binding sidesteps the question.
 
 ## Trust boundaries
 

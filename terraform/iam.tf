@@ -3,7 +3,7 @@
 resource "google_service_account" "broker" {
   account_id   = "bankvault-broker"
   display_name = "BankVault request broker"
-  description  = "Runs request_broker: MFA-freshness gate, validation, PAM grant creation, ledger write."
+  description  = "Runs request_broker: pre-flight validation, MFA-freshness check, ledger write. Cannot create PAM grants (ADR-006)."
   project      = var.project_id
 }
 
@@ -14,10 +14,13 @@ resource "google_service_account" "reconcile" {
   project      = var.project_id
 }
 
-# Broker can read PAM entitlements and grants. The permission to CREATE a grant
-# depends on the request model verified per ADR-001 (broker-mediated vs direct).
-# Read access is the floor both models need; grant-creation eligibility is on the
-# entitlement's eligible_users, not a project role.
+# Broker gets viewer only, and that is now a settled boundary rather than a pending
+# question. PAM attaches a grant's privileges to the calling principal, so a broker that
+# could create grants would be elevating its own service account to read credit reports
+# — standing access held by a non-human identity (ADR-006). Grant-creation eligibility
+# lives on the entitlement's eligible_users, which is the underwriter group.
+#
+# Do not add a PAM admin or requester role here. That is the decision, not an oversight.
 resource "google_project_iam_member" "broker_pam_viewer" {
   project = var.project_id
   role    = "roles/privilegedaccessmanager.viewer"

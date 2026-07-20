@@ -1,7 +1,8 @@
 """Tests for the request broker: MFA freshness, validation, and the full path.
 
-Every GCP call is patched. A fresh, valid request must produce a GRANT row; every
-rejection must produce a DENY row and never call PAM.
+Every GCP call is patched. A fresh, valid request must produce a REQUEST row naming the
+entitlement the underwriter should request against; every rejection must produce a DENY
+row. The broker has no grant-creation path at all (ADR-006).
 """
 
 import time
@@ -101,37 +102,40 @@ def test_missing_justification_rejected(broker, cfg):
 
 # --- Full path ---------------------------------------------------------------
 
-def test_happy_path_grants_and_writes_grant_row(broker, cfg, monkeypatch):
+def test_happy_path_clears_request_and_writes_request_row(broker, cfg, monkeypatch):
     rows = []
-    pam_calls = []
-
-    def fake_grant(entitlement_name, justification, duration_seconds):
-        pam_calls.append((entitlement_name, duration_seconds))
-        return f"{entitlement_name}/grants/g-123"
-
-    monkeypatch.setattr(broker, "_create_pam_grant", fake_grant)
     monkeypatch.setattr(broker, "_write_ledger_row", lambda c, r: rows.append(r))
 
     payload = _good_payload()
     payload["auth_time"] = int(time.time()) - 30
     result = broker.process(payload, cfg)
 
-    assert result["status"] == "granted"
-    assert len(rows) == 1 and rows[0]["action_type"] == "GRANT"
+    assert result["status"] == "cleared_to_request"
+    assert len(rows) == 1 and rows[0]["action_type"] == "REQUEST"
     assert rows[0]["mfa_auth_time"] is not None
     assert rows[0]["resource_path"].endswith("/objects/APP-1001/")
-    assert rows[0]["pam_grant_name"].endswith("g-123")
-    assert len(pam_calls) == 1
-    assert pam_calls[0][0].endswith("bankvault-credit-report-app-1001")
+    assert rows[0]["entitlement_name"].endswith("bankvault-credit-report-app-1001")
+    # The broker never observes a grant, so it must not claim one exists (ADR-006).
+    assert "pam_grant_name" not in rows[0]
+    assert rows[0]["action_type"] != "GRANT"
 
 
-def test_stale_login_denies_without_calling_pam(broker, cfg, monkeypatch):
+def test_broker_has_no_grant_creation_path(broker):
+    """ADR-006 invariant: PAM elevates the caller, so a broker-side grant call would
+    elevate the broker's service account. Removing it is the decision, not an omission.
+
+    Mirrors tests/test_reconcile.py::test_reconcile_has_no_revoke_path.
+    """
+    import inspect
+
+    assert not hasattr(broker, "_create_pam_grant")
+    source = inspect.getsource(broker)
+    assert "create_grant" not in source
+    assert "privilegedaccessmanager" not in source
+
+
+def test_stale_login_denies(broker, cfg, monkeypatch):
     rows = []
-
-    def must_not_run(*a, **k):
-        raise AssertionError("PAM must not be called on a denied request")
-
-    monkeypatch.setattr(broker, "_create_pam_grant", must_not_run)
     monkeypatch.setattr(broker, "_write_ledger_row", lambda c, r: rows.append(r))
 
     payload = _good_payload()
@@ -145,7 +149,6 @@ def test_stale_login_denies_without_calling_pam(broker, cfg, monkeypatch):
 
 def test_self_approval_denies_with_deny_row(broker, cfg, monkeypatch):
     rows = []
-    monkeypatch.setattr(broker, "_create_pam_grant", lambda *a, **k: pytest.fail("no grant"))
     monkeypatch.setattr(broker, "_write_ledger_row", lambda c, r: rows.append(r))
 
     payload = _good_payload()

@@ -9,7 +9,7 @@ The Safeguards Rule governs how a financial institution protects customer inform
 | Requirement | Interpretation | Covered by |
 |---|---|---|
 | 314.4(c)(1) — access controls that limit access to customer information to authorized users | Explicit | No standing access anywhere in the system. Access exists only as a per-request, per-object PAM grant. `terraform/pam.tf`, `terraform/iam.tf` |
-| 314.4(c)(1) — periodic review of access | Interpretive | Standing access that would need periodic review does not exist; every grant is reviewed at request time by an approver and expires within 30 minutes. `functions/request_broker/main.py` (`validate_request`) |
+| 314.4(c)(1) — periodic review of access | Interpretive | Standing access that would need periodic review does not exist; every grant is reviewed at request time by an approver and expires within 30 minutes. Review and expiry are PAM's `approval_workflow` and `max_request_duration`, not application code. `terraform/pam.tf` |
 | 314.4(b) — risk assessment of foreseeable internal threats | Interpretive | The transferred-or-terminated-employee threat is the documented driver. `docs/adr/003-scope-and-actor-definition.md` |
 | 314.4(c)(2) — identify and manage the data you hold | Interpretive | One regulated data class (credit report), one bucket, one object prefix per application. `terraform/storage.tf` |
 
@@ -30,10 +30,10 @@ For a public lender, access to systems affecting financial reporting is an IT ge
 
 | Control area | Interpretation | Covered by |
 |---|---|---|
-| Logical access — provisioning and de-provisioning | Explicit | Provisioning is the PAM grant; de-provisioning is PAM auto-expiry. Both are logged. `functions/request_broker/main.py`, `terraform/pam.tf` |
+| Logical access — provisioning and de-provisioning | Explicit | Provisioning is the PAM grant, requested by the underwriter themselves; de-provisioning is PAM auto-expiry. Evidence is PAM's admin-activity audit log exported to `bankvault_platform_logs`, not application code. `terraform/pam.tf`, `terraform/logging.tf` |
 | Logical access — audit trail | Explicit | Append-only `access_grants` ledger plus an independent platform-log export. `terraform/bigquery.tf`, `terraform/logging.tf` |
 | Change management — access-control changes are reviewed | Explicit | The entitlement, its condition, and its eligible principals are Terraform, changed by reviewed commit. `terraform/pam.tf` |
-| Segregation of duties | Explicit | Requester cannot be approver; enforced in code before any grant. `functions/request_broker/main.py` (`validate_request`) |
+| Segregation of duties | Explicit | Requester cannot approve their own grant. Enforced by PAM's `approval_workflow`, whose approver principals are a different group from `eligible_users`. The broker's `validate_request` also rejects self-approval, but as pre-flight evidence rather than enforcement — it is skippable (ADR-006). `terraform/pam.tf`, `terraform/variables.tf` |
 
 ## FFIEC IT Examination Handbook — Information Security (Access Control)
 
