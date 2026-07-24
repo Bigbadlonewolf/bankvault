@@ -850,9 +850,10 @@ Underwriter
     │    justification, id_token }                           │
     │                                                        ▼
     │                        request_broker (Cloud Function v2, HTTP, Python 3.12)
-    │                            ├── verify_mfa_freshness(id_token)
-    │                            │       decode the OIDC token, read auth_time, reject if
-    │                            │       now - auth_time &gt; max_auth_age_seconds (default 900).
+    │                            ├── verify_identity(id_token)
+    │                            │       verify the OIDC token (RS256 sig vs IdP JWKS, iss/aud/exp),
+    │                            │       bind to the verified identity claim, read auth_time, reject
+    │                            │       if now - auth_time &gt; max_auth_age_seconds (default 900).
     │                            │       NOT enforcement. The broker is skippable, so this is
     │                            │       early rejection plus the auth_time the ledger records.
     │                            │       Also NOT an IAM Condition: GCP IAM has no &quot;how recently
@@ -961,7 +962,7 @@ credit-reports bucket (GCS)
 <li><strong>CMEK</strong> on the bucket and datasets, so key custody is separable from data custody.</li>
 <li><strong>DLP content inspection</strong> on reads, to catch a credit report that lands in the wrong object prefix.</li>
 <li><strong>Automated containment</strong>: wiring the reconcile flag to a real PAM grant revocation (ADR-005 open question).</li>
-<li><strong>A real JWKS verification path</strong> in <code>verify_mfa_freshness</code>, replacing the claims-shape check with signature verification against the live IdP.</li>
+<li><strong>A live IdP behind the JWKS verification path.</strong> <code>verify_identity</code> already verifies the RS256 signature against the JWKS at <code>OIDC_JWKS_URI</code> (with issuer/audience/expiry); what remains is pointing those <code>OIDC_*</code> env vars at a real Workforce Identity Federation / IdP endpoint. Until then it is fail-closed and denies every request.</li>
 <li><strong>Alerting</strong>: routing the reconcile job's structured alert log to an on-call channel with a threshold.</li>
 </ul>
 

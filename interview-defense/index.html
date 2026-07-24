@@ -1001,7 +1001,7 @@ Short-lived credentials shorten the window on privileges you already hold. This 
 <p><strong>Q: How did you test any of this without deploying?</strong>
 <code>terraform fmt</code>, <code>init -backend=false</code>, and <code>validate</code> for the configuration; pytest with every GCP client mocked for the Python. That verifies logic and syntax, not behavior against live GCP. I've been explicit in the README that this is a reference architecture, not a deployed system, and the untested boundary is the PAM API call itself. I'd rather say that than let someone assume I've run it in production.</p>
 <p><strong>Q: What's the weakest part?</strong>
-Two things. The signature-verification stub: the broker reads a token's <code>auth_time</code> claim without verifying the signature against a live JWKS endpoint, so in this build the freshness claim is only as trustworthy as the caller. And the entitlement-per-application scaling ceiling. Both are in the README under "What this isn't," because a reviewer finding them there thinks differently about me than a reviewer finding them in the code.</p>
+Two things. No live IdP is wired: <code>verify_identity</code> fully verifies the OIDC token — RS256 signature against the JWKS, issuer, audience, expiry — and binds the request to the verified identity, but with <code>OIDC_ISSUER</code>/<code>OIDC_AUDIENCE</code>/<code>OIDC_JWKS_URI</code> unset it is fail-closed and denies every request, so the auth path is complete in code but inert until those point at a real provider. And the entitlement-per-application scaling ceiling. Both are in the README under "What this isn't," because a reviewer finding them there thinks differently about me than a reviewer finding them in the code.</p>
 <hr />
 <h2 id="5-compliance-mapping-where-to-be-careful">5. Compliance mapping: where to be careful<a class="headerlink" href="#5-compliance-mapping-where-to-be-careful" title="Permanent link">&para;</a></h2>
 <p>The mapping is strong because it separates explicit from interpretive claims. Three specific exposures.</p>
@@ -1014,7 +1014,7 @@ Two things. The signature-verification stub: the broker reads a token's <code>au
 <ul>
 <li>"It's deployed." It isn't. <code>terraform validate</code> and pytest are not deployment.</li>
 <li>"It's production-ready." No VPC Service Controls, no CMEK, no DLP, no alerting pipeline.</li>
-<li>"It verifies the token." It decodes claims. Signature verification is a stub.</li>
+<li>"It authenticates real users." It fully verifies an OIDC token (signature/iss/aud/exp) and binds identity, and it is fail-closed — but no live IdP is wired, so with <code>OIDC_*</code> unset it denies every request rather than authenticating anyone yet.</li>
 <li>"Reconcile contains overruns." It detects them.</li>
 <li>"The bank has zero-trust access." One flow, one actor, one data class. ADR-003 exists precisely so you say the narrow thing.</li>
 <li>"I built a PAM broker." After ADR-006 you built a pre-flight gate and an audit ledger. The smaller claim is the true one and it survives follow-up questions.</li>
@@ -1027,10 +1027,10 @@ Two things. The signature-verification stub: the broker reads a token's <code>au
 <li>[x] README corrected: stale <code>300s</code> gone, mermaid diagram drawn from the actual Terraform, enforcement/evidence split stated</li>
 <li>[x] Controls mapping updated for ADR-006 (periodic-review, provisioning, SoD rows repointed at <code>pam.tf</code> and the PAM audit-log export)</li>
 <li>[x] Project <code>CLAUDE.md</code> updated so a future agent does not "helpfully" restore grant creation</li>
-<li>[ ] <code>auth_time</code> body branch deleted from <code>_extract_auth_time</code>; <code>id_token</code> required</li>
-<li>[ ] <code>requested_by</code> derived from token claims</li>
-<li>[ ] <code>_verify_signature()</code> present as an explicit <code>NotImplementedError</code> seam</li>
-<li>[ ] demo curl in README uses <code>id_token</code> rather than a raw <code>auth_time</code></li>
+<li>[x] <code>auth_time</code> body branch deleted; <code>id_token</code> required, verified before <code>auth_time</code> is trusted</li>
+<li>[x] <code>requested_by</code> derived from the verified token claim; a mismatched body <code>requested_by</code> is rejected</li>
+<li>[x] full OIDC signature verification implemented behind the <code>_verify_id_token</code> / <code>_fetch_signing_key</code> seams (replaces the planned <code>NotImplementedError</code> stub), fail-closed when <code>OIDC_*</code> is unset</li>
+<li>[x] demo curl in README uses <code>id_token</code> rather than a raw <code>auth_time</code></li>
 <li>[ ] <code>approved_by</code> renamed <code>claimed_approver</code>; SOX mapping repointed to PAM audit logs</li>
 <li>[ ] ACM reauth binding expressed in Terraform (currently documented only, not provisioned)</li>
 <li>[ ] PCI section reframed at pattern level</li>
