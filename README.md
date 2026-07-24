@@ -24,7 +24,7 @@ flowchart TD
 
     subgraph PREFLIGHT["request_broker — pre-flight gate, NOT a chokepoint"]
         BR["<b>request_broker</b><br/>Cloud Function v2 · HTTP · Python 3.12"]
-        MFA["verify_mfa_freshness()<br/>reject if now − auth_time > <b>900s</b><br/>evidence + early rejection, not enforcement"]
+        MFA["verify_identity()<br/>verify OIDC token (sig/iss/aud/exp), bind identity;<br/>reject if now − auth_time > <b>900s</b><br/>evidence + early rejection, not enforcement"]
         VAL["validate_request()<br/>domain · SoD requester ≠ approver<br/>duration cap · known application_id"]
         LW["write_ledger_row()<br/><b>REQUEST</b> or <b>DENY</b> — never GRANT"]
     end
@@ -155,14 +155,17 @@ pytest tests/ -v
 ### 5. Try the broker locally (boots without real GCP)
 ```bash
 scripts/run-local.sh broker
-# A stale-login request is rejected by verify_mfa_freshness before any PAM call:
+# With no IdP configured locally, verify_identity is fail-closed: the request is denied
+# before any PAM call. Point OIDC_ISSUER / OIDC_AUDIENCE / OIDC_JWKS_URI at a real
+# provider (and pass a genuine id_token) to authenticate for real.
 curl -s localhost:8080 -H "Content-Type: application/json" -d '{
+  "id_token":"<OIDC id_token from your IdP>",
   "requested_by":"underwriter@lender.example.com",
   "approved_by":"lead@lender.example.com",
   "application_id":"APP-1001",
-  "justification":"manual QC review",
-  "auth_time": 0
+  "justification":"manual QC review"
 }' | python -m json.tool
+# -> {"status": "denied", "reason": "identity verification is not configured ..."}
 ```
 
 ## Compliance coverage
@@ -191,7 +194,7 @@ Four claims in this repo are narrower than they look, and all four are stated on
 ## What this isn't
 
 - **Not a real lender.** No core system, no real borrower data, no real underwriting workflow. It is a portfolio-grade demonstration of the JIT-access pattern on a plausible lending use case.
-- **Not wired to a real IdP.** Workforce Identity Federation is the documented identity plane (ADR-002), but no live SAML/OIDC provider is connected. `verify_mfa_freshness` validates a token's claims shape and `auth_time`; it does not perform full signature verification against a live JWKS endpoint in this repo.
+- **Not wired to a real IdP.** Workforce Identity Federation is the documented identity plane (ADR-002), but no live SAML/OIDC provider is connected. `verify_identity` performs full OIDC verification — RS256 signature against the IdP JWKS, plus issuer, audience, and expiry — and binds the request to the verified identity claim rather than a self-asserted `requested_by`. It is **fail-closed**: with the `OIDC_ISSUER` / `OIDC_AUDIENCE` / `OIDC_JWKS_URI` env vars unset (as they are here, with no IdP connected), every request is denied. Wiring the JWKS endpoint to a live IdP is the remaining deployment step, not a code stub.
 - **The ACM reauth binding is documented, not provisioned.** The architecture diagram draws it as the enforcement layer because that is where enforcement belongs after ADR-006, but there is no `google_access_context_manager_*` resource in `terraform/`. It is an organization-level control that needs an access policy this project does not own. Until it is applied, the enforced-recency claim is a design position, not a deployed control — and the broker's 900s check is the only freshness logic actually present in this repo.
 - **Not deployed.** Verified with `fmt` / `validate` / `pytest`. `terraform apply` is left to whoever has credentials.
 - **Not production-hardened.** No VPC Service Controls, no CMEK by default, no DLP content inspection, no alerting pipeline beyond the structured log the reconcile job emits. These are reasonable next steps, listed in [`docs/architecture.md`](docs/architecture.md), not gaps hidden under the demo.

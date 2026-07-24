@@ -104,7 +104,7 @@ Short-lived credentials shorten the window on privileges you already hold. This 
 `terraform fmt`, `init -backend=false`, and `validate` for the configuration; pytest with every GCP client mocked for the Python. That verifies logic and syntax, not behavior against live GCP. I've been explicit in the README that this is a reference architecture, not a deployed system, and the untested boundary is the PAM API call itself. I'd rather say that than let someone assume I've run it in production.
 
 **Q: What's the weakest part?**
-Two things. The signature-verification stub: the broker reads a token's `auth_time` claim without verifying the signature against a live JWKS endpoint, so in this build the freshness claim is only as trustworthy as the caller. And the entitlement-per-application scaling ceiling. Both are in the README under "What this isn't," because a reviewer finding them there thinks differently about me than a reviewer finding them in the code.
+Two things. No live IdP is wired: `verify_identity` fully verifies the OIDC token — RS256 signature against the JWKS, issuer, audience, expiry — and binds the request to the verified identity, but with `OIDC_ISSUER`/`OIDC_AUDIENCE`/`OIDC_JWKS_URI` unset it is fail-closed and denies every request, so the auth path is complete in code but inert until those point at a real provider. And the entitlement-per-application scaling ceiling. Both are in the README under "What this isn't," because a reviewer finding them there thinks differently about me than a reviewer finding them in the code.
 
 ---
 
@@ -126,7 +126,7 @@ Also: after ADR-006 the mapping rows citing `request_broker/main.py` for provisi
 
 - "It's deployed." It isn't. `terraform validate` and pytest are not deployment.
 - "It's production-ready." No VPC Service Controls, no CMEK, no DLP, no alerting pipeline.
-- "It verifies the token." It decodes claims. Signature verification is a stub.
+- "It authenticates real users." It fully verifies an OIDC token (signature/iss/aud/exp) and binds identity, and it is fail-closed — but no live IdP is wired, so with `OIDC_*` unset it denies every request rather than authenticating anyone yet.
 - "Reconcile contains overruns." It detects them.
 - "The bank has zero-trust access." One flow, one actor, one data class. ADR-003 exists precisely so you say the narrow thing.
 - "I built a PAM broker." After ADR-006 you built a pre-flight gate and an audit ledger. The smaller claim is the true one and it survives follow-up questions.
@@ -141,10 +141,10 @@ Do not schedule the deep dive until these are true:
 - [x] README corrected: stale `300s` gone, mermaid diagram drawn from the actual Terraform, enforcement/evidence split stated
 - [x] Controls mapping updated for ADR-006 (periodic-review, provisioning, SoD rows repointed at `pam.tf` and the PAM audit-log export)
 - [x] Project `CLAUDE.md` updated so a future agent does not "helpfully" restore grant creation
-- [ ] `auth_time` body branch deleted from `_extract_auth_time`; `id_token` required
-- [ ] `requested_by` derived from token claims
-- [ ] `_verify_signature()` present as an explicit `NotImplementedError` seam
-- [ ] demo curl in README uses `id_token` rather than a raw `auth_time`
+- [x] `auth_time` body branch deleted; `id_token` required, verified before `auth_time` is trusted
+- [x] `requested_by` derived from the verified token claim; a mismatched body `requested_by` is rejected
+- [x] full OIDC signature verification implemented behind the `_verify_id_token` / `_fetch_signing_key` seams (replaces the planned `NotImplementedError` stub), fail-closed when `OIDC_*` is unset
+- [x] demo curl in README uses `id_token` rather than a raw `auth_time`
 - [ ] `approved_by` renamed `claimed_approver`; SOX mapping repointed to PAM audit logs
 - [ ] ACM reauth binding expressed in Terraform (currently documented only, not provisioned)
 - [ ] PCI section reframed at pattern level

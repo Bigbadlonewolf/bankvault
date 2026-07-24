@@ -62,6 +62,24 @@ variable "reconcile_schedule" {
   default     = "*/15 * * * *"
 }
 
+variable "oidc_issuer" {
+  type        = string
+  description = "OIDC issuer (iss) the broker requires on the caller's id_token (ADR-002/004). Empty leaves verify_identity fail-closed: every request is denied until a real IdP is wired."
+  default     = ""
+}
+
+variable "oidc_audience" {
+  type        = string
+  description = "OIDC audience (aud) the broker requires on the caller's id_token. Empty keeps identity verification fail-closed."
+  default     = ""
+}
+
+variable "oidc_jwks_uri" {
+  type        = string
+  description = "JWKS endpoint the broker fetches the RS256 signing key from to verify the id_token signature. Empty keeps identity verification fail-closed."
+  default     = ""
+}
+
 variable "function_source_bucket_name" {
   type        = string
   description = "Bucket that holds the zipped Cloud Function source. Defaults to a project-scoped name."

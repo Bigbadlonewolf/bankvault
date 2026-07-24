@@ -18,3 +18,10 @@ project_id = "your-gcp-project-id"
 # max_grant_minutes    = 30   # PAM caps and expires the grant at this bound
 # max_auth_age_seconds = 900  # login must be fresher than this at the broker pre-flight check (ADR-004; evidence, not enforcement — see ADR-006)
 # reconcile_schedule   = "*/15 * * * *"
+
+# OIDC identity verification (ADR-002/004). Leave unset and verify_identity is
+# fail-closed: the broker denies every request. Point these at the IdP / Workforce
+# Identity Federation provider that fronts the broker to authenticate for real.
+# oidc_issuer   = "https://your-idp.example.com/"
+# oidc_audience = "bankvault-request-broker"
+# oidc_jwks_uri = "https://your-idp.example.com/.well-known/jwks.json"

@@ -63,6 +63,9 @@ resource "google_cloudfunctions2_function" "request_broker" {
       MAX_AUTH_AGE_SECONDS = tostring(var.max_auth_age_seconds)
       MAX_GRANT_MINUTES    = tostring(var.max_grant_minutes)
       ENTITLEMENT_PREFIX   = local.entitlement_prefix
+      OIDC_ISSUER          = var.oidc_issuer
+      OIDC_AUDIENCE        = var.oidc_audience
+      OIDC_JWKS_URI        = var.oidc_jwks_uri
     }
   }
 

@@ -10,12 +10,18 @@ to remove. So the underwriter requests their own grant directly against the enti
 this broker names back to them.
 
 What it does:
-  - refuses stale-login and malformed requests before they reach PAM, with a reason
-  - writes the `auth_time` that gated each request into the append-only ledger
+  - verifies the caller's OIDC id_token (RS256 signature against the IdP JWKS, plus
+    issuer, audience, and expiry) and binds the request to the authenticated identity,
+    fail-closed -- the request body cannot assert who it is (ADR-002)
+  - refuses unverified-identity, stale-login, and malformed requests before they reach
+    PAM, with a reason
+  - writes the verified `auth_time` that gated each request into the append-only ledger
 
 Enforced recency is an Access Context Manager reauth binding at the platform's one-hour
 minimum. The 15-minute check here is early rejection and evidence, not enforcement; an
-underwriter who skips this endpoint reaches PAM anyway (ADR-006).
+underwriter who skips this endpoint reaches PAM anyway (ADR-006). Identity verification
+is likewise pre-flight: it makes the ledger's identity and `auth_time` trustworthy, but
+the platform (Workforce Identity Federation + ACM) remains the enforcement boundary.
 
 PAM owns approval and expiry (ADR-001); nothing here revokes anything. The BigQuery call
 sits behind a seam (`_bq_client`) so validation and freshness logic is unit-tested without
@@ -24,8 +30,6 @@ touching the network.
 
 from __future__ import annotations
 
-import base64
-import binascii
 import json
 import os
 import re
@@ -49,6 +53,14 @@ def _config() -> dict:
         "max_auth_age_seconds": int(os.environ.get("MAX_AUTH_AGE_SECONDS", "900")),
         "max_grant_minutes": int(os.environ.get("MAX_GRANT_MINUTES", "30")),
         "entitlement_prefix": os.environ.get("ENTITLEMENT_PREFIX", "bankvault-credit-report-"),
+        # OIDC identity verification (ADR-002/004). Unset -> verify_identity fails
+        # closed and every request is denied; wire these to the Workforce Identity
+        # Federation / IdP that fronts the broker before deploying.
+        "oidc_issuer": os.environ.get("OIDC_ISSUER", ""),
+        "oidc_audience": os.environ.get("OIDC_AUDIENCE", ""),
+        "oidc_jwks_uri": os.environ.get("OIDC_JWKS_URI", ""),
+        "oidc_identity_claim": os.environ.get("OIDC_IDENTITY_CLAIM", "email"),
+        "oidc_leeway_seconds": int(os.environ.get("OIDC_LEEWAY_SECONDS", "60")),
     }
 
 
@@ -60,45 +72,63 @@ class RequestRejected(Exception):
         self.reason = reason
 
 
-# --- MFA freshness (ADR-004) -------------------------------------------------
+# --- Identity & MFA freshness (ADR-002, ADR-004) -----------------------------
 
-def _decode_jwt_auth_time(id_token: str) -> int | None:
-    """Read auth_time from a JWT payload.
+def _fetch_signing_key(jwks_uri: str, id_token: str):  # pragma: no cover - network seam
+    """Resolve the RSA signing key for an id_token from the IdP JWKS endpoint.
 
-    This decodes the claims segment only. It does NOT verify the signature; a real
-    deployment verifies against the IdP JWKS. That stub boundary is called out in the
-    README under "What this isn't".
+    Isolated behind a seam so signature verification is unit-tested without a live JWKS
+    endpoint: tests patch this (or _verify_id_token) instead of reaching the network.
     """
+    from jwt import PyJWKClient
+
+    return PyJWKClient(jwks_uri).get_signing_key_from_jwt(id_token).key
+
+
+def _verify_id_token(id_token: str, cfg: dict, now: int) -> dict:
+    """Verify an OIDC id_token and return its claims, or raise RequestRejected.
+
+    Fail-closed on every axis: an unconfigured verifier, an unreachable IdP, a bad
+    signature, a wrong issuer/audience, or an expired token all reject. Verification
+    never falls back to trusting unverified claims -- that fallback is the bypass this
+    function exists to remove.
+    """
+    issuer = cfg.get("oidc_issuer")
+    audience = cfg.get("oidc_audience")
+    jwks_uri = cfg.get("oidc_jwks_uri")
+    if not (issuer and audience and jwks_uri):
+        raise RequestRejected(
+            "identity verification is not configured (OIDC issuer/audience/JWKS unset); "
+            "refusing to trust an unverified token"
+        )
+
     try:
-        payload_b64 = id_token.split(".")[1]
-        padding = "=" * (-len(payload_b64) % 4)
-        claims = json.loads(base64.urlsafe_b64decode(payload_b64 + padding))
-    except (IndexError, ValueError, binascii.Error):
-        return None
-    auth_time = claims.get("auth_time")
-    return int(auth_time) if isinstance(auth_time, (int, float)) else None
+        import jwt
+
+        signing_key = _fetch_signing_key(jwks_uri, id_token)
+        claims = jwt.decode(
+            id_token,
+            signing_key,
+            algorithms=["RS256"],
+            audience=audience,
+            issuer=issuer,
+            leeway=cfg.get("oidc_leeway_seconds", 60),
+            options={"require": ["exp", "iat", "iss", "aud"]},
+        )
+    except RequestRejected:
+        raise
+    except ImportError as exc:  # pragma: no cover - deploy dependency, not a runtime path
+        raise RequestRejected(f"identity verifier unavailable: {exc}")
+    except Exception as exc:  # PyJWTError, JWKS fetch failure, IdP down -> fail closed
+        raise RequestRejected(f"id_token verification failed: {exc}")
+
+    if not isinstance(claims, dict):
+        raise RequestRejected("verified token did not decode to a claims object")
+    return claims
 
 
-def _extract_auth_time(payload: dict) -> int | None:
-    if "auth_time" in payload:
-        try:
-            return int(payload["auth_time"])
-        except (TypeError, ValueError):
-            return None
-    if "id_token" in payload and isinstance(payload["id_token"], str):
-        return _decode_jwt_auth_time(payload["id_token"])
-    return None
-
-
-def verify_mfa_freshness(payload: dict, max_auth_age_seconds: int, now: int | None = None) -> int:
-    """Return the gating auth_time, or raise RequestRejected if the login is stale.
-
-    Fail-closed: a missing or unreadable auth_time is a rejection, not a pass.
-    """
-    now = int(time.time()) if now is None else now
-    auth_time = _extract_auth_time(payload)
-    if auth_time is None:
-        raise RequestRejected("no readable auth_time; cannot confirm login freshness")
+def _check_freshness(auth_time: int, max_auth_age_seconds: int, now: int) -> int:
+    """Return auth_time if the login is fresh, else raise RequestRejected. Fail-closed."""
     age = now - auth_time
     if age < 0:
         raise RequestRejected("auth_time is in the future; rejecting")
@@ -109,20 +139,58 @@ def verify_mfa_freshness(payload: dict, max_auth_age_seconds: int, now: int | No
     return auth_time
 
 
+def verify_identity(payload: dict, cfg: dict, now: int | None = None) -> dict:
+    """Authenticate the caller from their OIDC id_token and gate on login freshness.
+
+    Returns {"identity": <verified email>, "auth_time": <int>}. The identity is taken
+    from the *verified* token, never from the request body -- a request cannot assert
+    who it is. Fail-closed: a missing token, an unverifiable token, a missing identity
+    claim, or a missing/unreadable auth_time is a rejection, never a pass.
+    """
+    now = int(time.time()) if now is None else now
+
+    id_token = payload.get("id_token")
+    if not isinstance(id_token, str) or not id_token:
+        raise RequestRejected("id_token is required; identity cannot be verified without one")
+
+    claims = _verify_id_token(id_token, cfg, now)
+
+    identity_claim = cfg.get("oidc_identity_claim", "email")
+    identity = str(claims.get(identity_claim) or "").strip().lower()
+    if not identity:
+        raise RequestRejected(f"verified token has no {identity_claim} claim; cannot bind identity")
+
+    auth_time = claims.get("auth_time")
+    if not isinstance(auth_time, (int, float)):
+        raise RequestRejected("no readable auth_time in verified token; cannot confirm login freshness")
+
+    auth_time = _check_freshness(int(auth_time), cfg["max_auth_age_seconds"], now)
+    return {"identity": identity, "auth_time": auth_time}
+
+
 # --- Validation (ADR-003) ----------------------------------------------------
 
-def validate_request(payload: dict, cfg: dict) -> dict:
-    """Check domain, segregation of duties, duration cap, and application id.
+def validate_request(payload: dict, cfg: dict, identity: str) -> dict:
+    """Check identity binding, domain, segregation of duties, duration cap, application id.
 
-    Returns a normalized request dict, or raises RequestRejected.
+    `identity` is the caller authenticated by verify_identity and is authoritative. A
+    requested_by in the body that disagrees with it is an impersonation attempt and is
+    rejected (the DENY reason records it). Returns a normalized request dict, or raises
+    RequestRejected.
     """
-    requested_by = (payload.get("requested_by") or "").strip().lower()
+    requested_by = identity
     approved_by = (payload.get("approved_by") or "").strip().lower()
     application_id = (payload.get("application_id") or "").strip()
     justification = (payload.get("justification") or "").strip()
 
-    if not requested_by or not approved_by:
-        raise RequestRejected("requested_by and approved_by are both required")
+    claimed_by = (payload.get("requested_by") or "").strip().lower()
+    if claimed_by and claimed_by != requested_by:
+        raise RequestRejected(
+            f"requested_by {claimed_by!r} does not match the authenticated identity {requested_by!r}"
+        )
+
+    if not approved_by:
+        raise RequestRejected("approved_by is required")
 
     domain = "@" + cfg["allowed_domain"]
     if not requested_by.endswith(domain) or not approved_by.endswith(domain):
@@ -195,8 +263,8 @@ def process(payload: dict, cfg: dict | None = None) -> dict:
     }
 
     try:
-        auth_time = verify_mfa_freshness(payload, cfg["max_auth_age_seconds"])
-        req = validate_request(payload, cfg)
+        ident = verify_identity(payload, cfg)
+        req = validate_request(payload, cfg, ident["identity"])
     except RequestRejected as rejected:
         _write_ledger_row(cfg, {**base, "action_type": "DENY", "decision_reason": rejected.reason})
         return {"status": "denied", "request_id": request_id, "reason": rejected.reason}
@@ -221,7 +289,7 @@ def process(payload: dict, cfg: dict | None = None) -> dict:
         "resource_path": resource_path,
         "justification": req["justification"],
         "duration_seconds": req["duration_seconds"],
-        "mfa_auth_time": _iso_from_epoch(auth_time),
+        "mfa_auth_time": _iso_from_epoch(ident["auth_time"]),
         "entitlement_name": entitlement_name,
     })
 

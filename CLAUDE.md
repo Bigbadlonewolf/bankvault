@@ -10,7 +10,7 @@ No underwriter holds standing access to a borrower's credit report. Each read is
 
 ```
 Underwriter ──POST──▶ request_broker          (optional pre-flight; NOT a chokepoint)
-                          ├─ verify_mfa_freshness   (900s — evidence + early reject, ADR-004/006)
+                          ├─ verify_identity        (OIDC sig/iss/aud/exp + 900s freshness; ADR-002/004/006)
                           ├─ validate_request       (domain, SoD, duration cap, app id)
                           └─ write_ledger_row        (BigQuery access_grants: REQUEST/DENY)
 
@@ -65,8 +65,8 @@ scripts/run-local.sh reconcile   # CloudEvent :8081, entry handle_event
 - Freshness is **not** enforced by an IAM Condition. GCP IAM has no authentication-recency attribute. Do not "move it into a CEL condition"; that capability does not exist.
 - Freshness is **not** enforced by the broker either, despite the check living there. The broker is skippable, so its 900s check is early rejection plus the ledger's `mfa_auth_time` evidence. Enforcement is an Access Context Manager reauth binding whose floor is **1 hour** (`--session-length` accepts `0s` or 1h–24h, nothing between). Do not write "the broker enforces freshness" back into the docs; it is the claim ADR-006 exists to retract.
 - ACM bindings cannot target PAM specifically, so the reauth requirement covers the group's whole GCP session. That operational cost is stated in the README on purpose. Don't quietly drop it.
-- Fail-closed: a missing or unreadable `auth_time` is a rejection, never a pass. Keep it that way.
-- `verify_mfa_freshness` decodes the JWT claims segment only; it does not verify the signature. That stub boundary is stated in the README. If you add real JWKS verification, update the README's "What this isn't".
+- Fail-closed: a missing token, an unverifiable token, or a missing/unreadable `auth_time` is a rejection, never a pass. Keep it that way.
+- `verify_identity` (in `request_broker/main.py`) does full OIDC verification: it verifies the id_token's RS256 signature against the IdP JWKS at `OIDC_JWKS_URI` plus issuer/audience/expiry, then binds the request to the verified identity claim — a body `requested_by` that disagrees is rejected. It is fail-closed: with `OIDC_ISSUER`/`OIDC_AUDIENCE`/`OIDC_JWKS_URI` unset it denies every request. The signature check sits behind the `_verify_id_token` / `_fetch_signing_key` seams so tests inject claims without crypto; one test exercises real RS256. Do not reintroduce an unverified `auth_time`-from-body path — that was the bypass this removed.
 
 ### Audit ledger
 - `access_grants` is append-only. Never write an `UPDATE`. A request's lifecycle is reconstructed by querying `request_id`, not by mutating a status column. This is what makes it SOX 404 evidence.

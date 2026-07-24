@@ -19,9 +19,10 @@ Underwriter
     │    justification, id_token }                           │
     │                                                        ▼
     │                        request_broker (Cloud Function v2, HTTP, Python 3.12)
-    │                            ├── verify_mfa_freshness(id_token)
-    │                            │       decode the OIDC token, read auth_time, reject if
-    │                            │       now - auth_time > max_auth_age_seconds (default 900).
+    │                            ├── verify_identity(id_token)
+    │                            │       verify the OIDC token (RS256 sig vs IdP JWKS, iss/aud/exp),
+    │                            │       bind to the verified identity claim, read auth_time, reject
+    │                            │       if now - auth_time > max_auth_age_seconds (default 900).
     │                            │       NOT enforcement. The broker is skippable, so this is
     │                            │       early rejection plus the auth_time the ledger records.
     │                            │       Also NOT an IAM Condition: GCP IAM has no "how recently
@@ -116,5 +117,5 @@ These are next steps, not gaps hidden under the demo:
 - **CMEK** on the bucket and datasets, so key custody is separable from data custody.
 - **DLP content inspection** on reads, to catch a credit report that lands in the wrong object prefix.
 - **Automated containment**: wiring the reconcile flag to a real PAM grant revocation (ADR-005 open question).
-- **A real JWKS verification path** in `verify_mfa_freshness`, replacing the claims-shape check with signature verification against the live IdP.
+- **A live IdP behind the JWKS verification path.** `verify_identity` already verifies the RS256 signature against the JWKS at `OIDC_JWKS_URI` (with issuer/audience/expiry); what remains is pointing those `OIDC_*` env vars at a real Workforce Identity Federation / IdP endpoint. Until then it is fail-closed and denies every request.
 - **Alerting**: routing the reconcile job's structured alert log to an on-call channel with a threshold.

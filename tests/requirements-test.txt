@@ -1,2 +1,3 @@
 pytest==8.*
 functions-framework==3.*
+PyJWT[crypto]==2.*

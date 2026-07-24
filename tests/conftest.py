@@ -45,4 +45,9 @@ def cfg():
         "max_auth_age_seconds": 900,
         "max_grant_minutes": 30,
         "entitlement_prefix": "bankvault-credit-report-",
+        "oidc_issuer": "https://idp.test/",
+        "oidc_audience": "bankvault-broker",
+        "oidc_jwks_uri": "https://idp.test/jwks",
+        "oidc_identity_claim": "email",
+        "oidc_leeway_seconds": 60,
     }
