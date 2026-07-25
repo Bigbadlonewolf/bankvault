@@ -55,7 +55,7 @@ flowchart TD
 
     SCH --> REC
     REC -.->|"cross-check ledger vs live PAM state"| ENT
-    REC -.->|"EXPIRE_FLAG row + structured alert"| BQ
+    REC -.->|"EXPIRE_FLAG / BYPASS_FLAG row + structured alert"| BQ
     LW --> BQ
     ENT -.->|"PAM admin-activity audit logs"| PLOG
     BR -.-> PLOG
@@ -181,13 +181,15 @@ Full citations and resource-level mapping: [`docs/controls-mapping.md`](docs/con
 
 ## Honest limits
 
-Four claims in this repo are narrower than they look, and all four are stated on purpose.
+Five claims in this repo are narrower than they look, and all five are stated on purpose.
 
-**The broker is not a chokepoint.** It is a pre-flight gate you can skip. The underwriter must be the eligible principal on the PAM entitlement, so the PAM request path is open to them by construction. A control that is bypassed by not calling it is not enforcement, and this repo does not describe it as one (ADR-006).
+**The broker is not a chokepoint.** It is a pre-flight gate you can skip. The underwriter must be the eligible principal on the PAM entitlement, so the PAM request path is open to them by construction. A control that is bypassed by not calling it is not enforcement, and this repo does not describe it as one (ADR-006). What it does *not* cost you: every check the broker runs is also enforced by the platform on the bypass path — PAM refuses self-approval ("you can't approve your own request"), caps the grant at `max_request_duration`, and restricts eligibility to the entitlement's `eligible_users`; ACM enforces login recency. So skipping the broker forfeits *evidence granularity* — the 900-second `auth_time` row — not a control. The design degrades to weaker evidence, never to weaker enforcement.
 
-**Enforced login recency is one hour, not fifteen minutes.** Access Context Manager's `--session-length` accepts `0s` or 1h–24h and nothing between, so one hour is the platform floor rather than a design choice. The fifteen-minute broker check is early rejection and ledger evidence. It also costs more than it looks: because PAM is not independently targetable by a `scopedAccessSettings` binding, the reauth requirement lands on the underwriter group's entire Google Cloud session, not just credit-report requests. Everyone in that group reauthenticates hourly for everything.
+**"Append-only" is a discipline, not a BigQuery guarantee.** The `access_grants` ledger is append-only because the broker only inserts rows and no principal is granted delete/update on it — not because BigQuery makes it immutable. BigQuery IAM has no insert-only permission: `bigquery.tables.updateData` covers insert, update, and delete alike, so append-only *cannot* be expressed as an IAM boundary. It is a code-path-and-least-privilege invariant, backed by the independent platform-log export as the tamper-evidence layer. Genuine immutability lives in a WORM store, and [`terraform/logging.tf`](terraform/logging.tf) now defines one — a second sink writes the same log stream to a retention-locked GCS bucket, the immutable copy *alongside* the queryable BigQuery export. Keep the line exact: the BigQuery ledger stays append-only-by-convention; the WORM bucket is where immutability is actually delivered.
 
-**Availability is bounded by the identity provider.** The broker denies access when the IdP is unreachable, because it cannot confirm the login is fresh. A loan decision with an SLA does not stop having one because the IdP is down. That trade is deliberate: an identity control that keeps granting when it cannot verify who is asking has a bypass, and the bypass opens under exactly the conditions an attacker wants. (ADR-004.)
+**Enforced login recency is one hour, not fifteen minutes.** Access Context Manager's `--session-length` accepts `0s` or 1h–24h and nothing between, so one hour is the platform floor rather than a design choice. The fifteen-minute broker check is early rejection and ledger evidence. It also costs more than it looks: `scopedAccessSettings` targets applications by OAuth `clientId` — "Cloud Console", "Google Cloud SDK" — but PAM has no distinct `clientId` of its own; it is reached *through* the SDK or the REST API. So the reauth binding can be scoped to the SDK (which does gate `gcloud pam grants create`), but not to the credit-report path alone, and the requirement lands on the underwriter group's entire Google Cloud session. Everyone in that group reauthenticates hourly for everything. The only path a console/SDK-scoped binding may not reach is a raw REST call bearing a user token outside the SDK; the unnarrowed binding closes that by covering the whole session.
+
+**Availability is bounded by the identity provider — at the reauth layer, not the broker.** The enforced dependency is ACM: if the IdP is unreachable, the underwriter cannot complete the hourly reauthentication, so no fresh session exists and the PAM request path is closed. The broker's own IdP-denial is the *same* dependency showing up on the skippable pre-flight path, not a second control. A loan decision with an SLA does not stop having one because the IdP is down. That trade is deliberate: an identity control that keeps granting when it cannot verify who is asking has a bypass, and the bypass opens under exactly the conditions an attacker wants. (ADR-004.)
 
 **Reconciliation detects an overrun. It does not contain one.** The honest sentence is "detected within roughly one reconcile interval," not "contained within." PAM owns the actual expiry; the reconcile job is a completeness and anomaly check, not a second enforcement path. (ADR-005.)
 

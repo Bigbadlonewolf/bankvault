@@ -20,7 +20,7 @@ Underwriter ──grants.create AS THEMSELVES──▶ PAM entitlement (per appl
 
 Access Context Manager reauth binding ─▶ the actual enforced recency control (1h floor)
 
-Cloud Scheduler ─▶ Pub/Sub ─▶ reconcile   (detect-only: flags overruns, ADR-005)
+Cloud Scheduler ─▶ Pub/Sub ─▶ reconcile   (detect-only: EXPIRE_FLAG overruns + BYPASS_FLAG broker-skips, ADR-005/006)
 
 Cloud Logging (broker, reconcile, PAM audit) ─▶ sink ─▶ BigQuery platform_logs
 ```
@@ -70,7 +70,8 @@ scripts/run-local.sh reconcile   # CloudEvent :8081, entry handle_event
 
 ### Audit ledger
 - `access_grants` is append-only. Never write an `UPDATE`. A request's lifecycle is reconstructed by querying `request_id`, not by mutating a status column. This is what makes it SOX 404 evidence.
-- `reconcile` only ever writes `EXPIRE_FLAG` rows. This is a code-level invariant with a test behind it (`tests/test_reconcile.py::test_reconcile_has_no_revoke_path`), not an IAM boundary. Do not add a revoke path without an ADR that argues for containment over detection (ADR-005).
+- Append-only is a **write-path + least-privilege invariant, not a BigQuery guarantee**. BQ IAM has no insert-only permission (`bigquery.tables.updateData` covers insert/update/delete alike), so it cannot be an IAM boundary; `deletion_protection` blocks dropping the table, not rewriting rows. Do not upgrade the docs to claim BQ "enforces" immutability — it doesn't. True WORM now lives in `terraform/logging.tf` (a retention-locked GCS bucket fed by a second log sink), **alongside — not replacing** — the queryable BigQuery export. Keep the two separate: the BigQuery ledger stays append-only-by-convention; the WORM bucket is where immutability is delivered, for the log stream only. The lock (`is_locked = true`) is irreversible — do not remove that warning from the Terraform.
+- `reconcile` writes only `EXPIRE_FLAG` and `BYPASS_FLAG` rows — never a revoke. `EXPIRE_FLAG` marks an overrun or ledger gap; `BYPASS_FLAG` marks a reconstructed PAM grant with no matching broker REQUEST, i.e. a grant that skipped the pre-flight and so carries no 15-min `auth_time` evidence (ADR-006). Both are detect-only; both are code-level invariants with tests behind them (`test_reconcile_has_no_revoke_path`, `test_reconcile_flags_bypass_grant`), not IAM boundaries. Do not add a revoke path without an ADR that argues for containment over detection (ADR-005). The bypass match is a heuristic on `(requester, application_id)` — broker and PAM share no request id, so exact grant→request correlation is impossible; do not "tighten" it into a claim of exactness.
 
 ### Naming
 - Terraform: `snake_case`, grouped by concern into `storage.tf` / `pam.tf` / `iam.tf` / `bigquery.tf` / `functions.tf` / `scheduler.tf` / `logging.tf`. Don't add a cross-cutting file without a reason.

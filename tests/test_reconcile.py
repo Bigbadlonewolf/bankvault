@@ -108,8 +108,10 @@ def test_reconcile_flags_overruns_only(reconcile_mod, monkeypatch, cfg):
     monkeypatch.setattr(reconcile_mod, "_query_open_grants", lambda c: open_grants)
     monkeypatch.setattr(reconcile_mod, "_query_pam_grant_events", lambda c: [])
     monkeypatch.setattr(reconcile_mod, "_query_flagged_request_ids", lambda c: set())
+    monkeypatch.setattr(reconcile_mod, "_query_broker_request_keys", lambda c: set())
+    monkeypatch.setattr(reconcile_mod, "_query_flagged_bypass_ids", lambda c: set())
     monkeypatch.setattr(reconcile_mod, "_check_pam_grant_active", lambda name: name == "g/old")
-    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason: flags.append((r["request_id"], reason)))
+    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason, action_type="EXPIRE_FLAG": flags.append((r["request_id"], reason)))
 
     result = reconcile_mod.reconcile(cfg)
 
@@ -126,8 +128,11 @@ def test_reconcile_flags_reconstructed_pam_grant(reconcile_mod, monkeypatch, cfg
     monkeypatch.setattr(reconcile_mod, "_query_open_grants", lambda c: [])
     monkeypatch.setattr(reconcile_mod, "_query_pam_grant_events", lambda c: [event])
     monkeypatch.setattr(reconcile_mod, "_query_flagged_request_ids", lambda c: set())
+    # This grant did clear the broker, so it is not a bypass.
+    monkeypatch.setattr(reconcile_mod, "_query_broker_request_keys", lambda c: {("sam@lender.example.com", "APP-1001")})
+    monkeypatch.setattr(reconcile_mod, "_query_flagged_bypass_ids", lambda c: set())
     monkeypatch.setattr(reconcile_mod, "_check_pam_grant_active", lambda name: True)
-    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason: flags.append((r["request_id"], reason)))
+    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason, action_type="EXPIRE_FLAG": flags.append((r["request_id"], reason)))
 
     result = reconcile_mod.reconcile(cfg)
 
@@ -144,8 +149,10 @@ def test_reconcile_requires_no_broker_grant_rows(reconcile_mod, monkeypatch, cfg
     monkeypatch.setattr(reconcile_mod, "_query_open_grants", lambda c: [])  # no broker GRANT rows
     monkeypatch.setattr(reconcile_mod, "_query_pam_grant_events", lambda c: [event])
     monkeypatch.setattr(reconcile_mod, "_query_flagged_request_ids", lambda c: set())
+    monkeypatch.setattr(reconcile_mod, "_query_broker_request_keys", lambda c: {("sam@lender.example.com", "APP-1002")})
+    monkeypatch.setattr(reconcile_mod, "_query_flagged_bypass_ids", lambda c: set())
     monkeypatch.setattr(reconcile_mod, "_check_pam_grant_active", lambda name: False)
-    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason: flags.append((r["request_id"], reason)))
+    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason, action_type="EXPIRE_FLAG": flags.append((r["request_id"], reason)))
 
     result = reconcile_mod.reconcile(cfg)
 
@@ -162,11 +169,83 @@ def test_reconcile_does_not_reflag_a_closed_out_grant(reconcile_mod, monkeypatch
     monkeypatch.setattr(reconcile_mod, "_query_open_grants", lambda c: [])
     monkeypatch.setattr(reconcile_mod, "_query_pam_grant_events", lambda c: [event])
     monkeypatch.setattr(reconcile_mod, "_query_flagged_request_ids", lambda c: {event["pam_grant_name"]})
-    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason: flags.append(r))
+    # Already cleared the broker and already bypass-checked: neither sweep re-fires.
+    monkeypatch.setattr(reconcile_mod, "_query_broker_request_keys", lambda c: {("sam@lender.example.com", "APP-1001")})
+    monkeypatch.setattr(reconcile_mod, "_query_flagged_bypass_ids", lambda c: set())
+    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason, action_type="EXPIRE_FLAG": flags.append(r))
 
     result = reconcile_mod.reconcile(cfg)
 
     assert result == {"open_grants": 0, "flagged": 0}
+    assert flags == []
+
+
+# --- Bypass detection (a grant that skipped the broker, ADR-006) --------------
+
+def test_find_bypassed_grants_flags_unmatched(reconcile_mod):
+    grants = [
+        {"request_id": "g1", "requester": "sam@lender.example.com", "application_id": "APP-1001"},
+        {"request_id": "g2", "requester": "amir@lender.example.com", "application_id": "APP-1002"},
+    ]
+    # Only sam/APP-1001 cleared the broker; amir/APP-1002 skipped it.
+    keys = {("sam@lender.example.com", "APP-1001")}
+    bypassed = reconcile_mod.find_bypassed_grants(grants, keys)
+    assert [g["request_id"] for g in bypassed] == ["g2"]
+
+
+def test_find_bypassed_grants_key_is_case_insensitive(reconcile_mod):
+    grants = [{"request_id": "g1", "requester": "Sam@Lender.Example.com", "application_id": "APP-1001"}]
+    keys = {("sam@lender.example.com", "APP-1001")}
+    assert reconcile_mod.find_bypassed_grants(grants, keys) == []
+
+
+def test_find_bypassed_grants_skips_uncorrelatable(reconcile_mod):
+    # No requester or no application: cannot correlate, so not evidence of a bypass.
+    grants = [
+        {"request_id": "g1", "requester": None, "application_id": "APP-1001"},
+        {"request_id": "g2", "requester": "sam@lender.example.com", "application_id": None},
+    ]
+    assert reconcile_mod.find_bypassed_grants(grants, set()) == []
+
+
+def test_reconcile_flags_bypass_grant(reconcile_mod, monkeypatch, cfg):
+    """A reconstructed PAM grant whose requester filed no broker REQUEST for that
+    application is flagged BYPASS_FLAG, with the requester recorded on the row."""
+    flags = []
+    event = _pam_event("APP-1001", create_offset=-60, duration_seconds=1800)  # still within window
+    monkeypatch.setattr(reconcile_mod, "_query_open_grants", lambda c: [])
+    monkeypatch.setattr(reconcile_mod, "_query_pam_grant_events", lambda c: [event])
+    monkeypatch.setattr(reconcile_mod, "_query_flagged_request_ids", lambda c: set())
+    monkeypatch.setattr(reconcile_mod, "_query_broker_request_keys", lambda c: set())  # broker saw nothing
+    monkeypatch.setattr(reconcile_mod, "_query_flagged_bypass_ids", lambda c: set())
+    monkeypatch.setattr(reconcile_mod, "_check_pam_grant_active", lambda name: True)
+    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason, action_type="EXPIRE_FLAG": flags.append((action_type, r["request_id"], r.get("requester"), reason)))
+
+    result = reconcile_mod.reconcile(cfg)
+
+    # No overrun (still within window), so the only flag is the bypass.
+    assert result["flagged"] == 1
+    assert flags[0][0] == "BYPASS_FLAG"
+    assert flags[0][1] == event["pam_grant_name"]
+    assert flags[0][2] == "sam@lender.example.com"
+    assert flags[0][3].startswith("BYPASS")
+
+
+def test_reconcile_does_not_reflag_a_bypassed_grant(reconcile_mod, monkeypatch, cfg):
+    """A grant already carrying a BYPASS_FLAG is not flagged again by the next cron."""
+    flags = []
+    event = _pam_event("APP-1001", create_offset=-60, duration_seconds=1800)
+    monkeypatch.setattr(reconcile_mod, "_query_open_grants", lambda c: [])
+    monkeypatch.setattr(reconcile_mod, "_query_pam_grant_events", lambda c: [event])
+    monkeypatch.setattr(reconcile_mod, "_query_flagged_request_ids", lambda c: set())
+    monkeypatch.setattr(reconcile_mod, "_query_broker_request_keys", lambda c: set())
+    monkeypatch.setattr(reconcile_mod, "_query_flagged_bypass_ids", lambda c: {event["pam_grant_name"]})
+    monkeypatch.setattr(reconcile_mod, "_check_pam_grant_active", lambda name: True)
+    monkeypatch.setattr(reconcile_mod, "_write_flag", lambda c, r, reason, action_type="EXPIRE_FLAG": flags.append(action_type))
+
+    result = reconcile_mod.reconcile(cfg)
+
+    assert result["flagged"] == 0
     assert flags == []
 
 

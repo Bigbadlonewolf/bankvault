@@ -1,9 +1,11 @@
 # ADR-004: MFA freshness as the signal, not session validity
 
-- **Status:** Accepted
+- **Status:** Accepted — **partially superseded by [ADR-006](006-who-requests-the-grant.md)**
 - **Date:** 2026-07-11
 - **Deciders:** Lanre
-- **Related:** ADR-002, ADR-005
+- **Related:** ADR-002, ADR-005, ADR-006
+
+> **Correction (ADR-006, 2026-07-20).** The decision below stands on its signal — recency, not session validity, is what gates a privileged read — and is preserved as written on 2026-07-11. What it gets wrong is *where* freshness is enforced. This ADR says the broker enforces it "before requesting the grant" and "in front of PAM." ADR-006 established that the broker cannot request the grant at all (PAM attaches privileges to the calling principal), so it is not a chokepoint and cannot enforce anything. **Enforcement is an Access Context Manager reauth binding at the platform's one-hour floor; the broker's 900-second check is early rejection and ledger evidence.** Likewise, the availability bound in "The cost, taken knowingly" is real but anchored to the wrong layer: the enforced dependency is ACM reauth (no fresh session → no PAM path), and the broker's IdP-denial is the same dependency on the skippable path. Read this ADR as the record of the decision at its date; read ADR-006 for where the control actually lives.
 
 ## Context
 

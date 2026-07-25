@@ -25,3 +25,13 @@ project_id = "your-gcp-project-id"
 # oidc_issuer   = "https://your-idp.example.com/"
 # oidc_audience = "bankvault-request-broker"
 # oidc_jwks_uri = "https://your-idp.example.com/.well-known/jwks.json"
+
+# WORM (write-once-read-many) copy of the platform log export. A second sink writes the
+# log stream to a GCS bucket with a LOCKED retention policy — the immutable evidence copy
+# BigQuery cannot provide.
+# WARNING: platform_logs_worm_locked = true is IRREVERSIBLE. A locked bucket cannot be
+# destroyed until every object ages past platform_log_retention_days. Default is 7 days so
+# a demo tears down within a week; raise it only when you mean it.
+# platform_log_retention_days = 7      # 2555 for a SOX/GLBA seven-year hold
+# platform_logs_worm_locked   = true   # set false ONLY for a throwaway demo
+# platform_logs_worm_bucket_name = ""  # defaults to <project_id>-bankvault-logs-worm

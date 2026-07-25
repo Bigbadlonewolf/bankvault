@@ -1,6 +1,15 @@
 # The audit ledger. Append-only by convention (never UPDATE); a grant's lifecycle
 # is reconstructed by querying request_id, not by mutating a status column. That
 # is what makes it SOX 404 evidence (ADR-005, controls-mapping.md).
+#
+# "Append-only" is a write-path + least-privilege invariant, NOT a BigQuery guarantee:
+# BQ IAM has no insert-only permission (bigquery.tables.updateData covers insert,
+# update, and delete alike), so it cannot be expressed as an IAM boundary.
+# deletion_protection below blocks dropping the table, not rewriting rows. The immutable
+# copy now lives in logging.tf: a second log sink writes the same stream to a
+# retention-locked GCS bucket (WORM). This BigQuery ledger stays append-only-by-convention
+# and queryable; the WORM bucket is the immutable evidence copy alongside it, not a
+# property of this table. See docs/architecture.md.
 resource "google_bigquery_dataset" "audit" {
   dataset_id  = "bankvault_audit"
   project     = var.project_id
@@ -26,7 +35,7 @@ resource "google_bigquery_table" "access_grants" {
   schema = jsonencode([
     { name = "request_id", type = "STRING", mode = "REQUIRED", description = "Correlates all events for one request." },
     { name = "event_time", type = "TIMESTAMP", mode = "REQUIRED", description = "When this event was recorded." },
-    { name = "action_type", type = "STRING", mode = "REQUIRED", description = "REQUEST | GRANT | DENY | EXPIRE_FLAG." },
+    { name = "action_type", type = "STRING", mode = "REQUIRED", description = "REQUEST | GRANT | DENY | EXPIRE_FLAG | BYPASS_FLAG. BYPASS_FLAG marks a PAM grant reconcile found with no broker pre-flight REQUEST (ADR-006)." },
     { name = "requested_by", type = "STRING", mode = "NULLABLE", description = "Underwriter email." },
     { name = "approved_by", type = "STRING", mode = "NULLABLE", description = "Approver email." },
     { name = "application_id", type = "STRING", mode = "NULLABLE", description = "Loan application the access is scoped to." },

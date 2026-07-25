@@ -73,7 +73,7 @@ If PAM expires grants on its own, the reconcile job looks redundant. It is not, 
 
 It exists for two things the expiry path does not give you:
 
-- **Ledger completeness.** The `access_grants` ledger is the SOX 404 evidence artifact. The broker writes no GRANT row (ADR-006), so the reconcile job reconstructs each grant from the PAM `CreateGrant` admin-activity audit events exported to `bankvault_platform_logs`, confirms every grant whose `window_end` has passed has a corresponding close-out, and writes an EXPIRE_FLAG row if the lifecycle event was never recorded. Without it, a grant could look perpetually open even though PAM expired it.
+- **Ledger completeness.** The `access_grants` ledger is the SOX 404 evidence artifact. The broker writes no GRANT row (ADR-006), so the reconcile job reconstructs each grant from the PAM `CreateGrant` admin-activity audit events exported to `bankvault_platform_logs`, confirms every grant whose `window_end` has passed has a corresponding close-out, and writes an EXPIRE_FLAG row if the lifecycle event was never recorded. Without it, a grant could look perpetually open even though PAM expired it. The same sweep runs a second detection: a reconstructed grant whose requester filed no broker REQUEST for that application skipped the pre-flight, so it carries none of the broker's 15-minute `auth_time` evidence and its recency rests on the ACM 1h floor alone. Reconcile records that as a `BYPASS_FLAG` row, so a bypass is surfaced in the ledger rather than being silent. It is detect-only, like the overrun flag — the row documents the weaker evidence, it does not deny the grant (ADR-006).
 
 - **Anomaly detection.** It cross-checks the reconstructed grants against live PAM grant state and flags a grant that PAM still reports active past its `window_end`, or an IAM binding on the bucket that no ledger row explains.
 
@@ -82,6 +82,8 @@ What it does **not** do is revoke. It writes an `EXPIRE_FLAG` row and emits a st
 ## Why the audit ledger is append-only
 
 `access_grants` never receives an `UPDATE`. Every lifecycle event (a request, a grant, a denial, an expiry flag) is a new row keyed by `request_id`. "Is this grant still active" is a query (a GRANT row with no matching EXPIRE row), not a status column someone could quietly edit after the fact. That property is what makes the ledger usable as SOX 404 ITGC evidence: the history can be appended to, not rewritten.
+
+Be precise about what enforces that, because it is weaker than it sounds. Append-only here is a property of the write path and the granted permissions, **not** a BigQuery feature. BigQuery IAM cannot express insert-only: the `bigquery.tables.updateData` permission that lets the broker write rows also permits `UPDATE` and `DELETE` DML, and there is no predefined or custom role that separates them. `deletion_protection = true` on the table blocks dropping the table, not rewriting its rows. So the honest claim is "append-only by code convention and least privilege, with the independent platform-log export as the tamper-evidence layer" — not "immutable." Genuine immutability lives in a store that has it: a GCS bucket with a locked retention policy (WORM). That store now exists in the build — `terraform/logging.tf` defines a second log sink writing the same stream to a retention-locked bucket, so the immutable copy sits *alongside* the queryable BigQuery export rather than replacing it. Keep the distinction exact: the BigQuery ledger is still append-only-by-convention, not immutable; the WORM bucket is where immutability is actually delivered, and only for the log stream it holds.
 
 Two independent layers back this up:
 
@@ -96,9 +98,9 @@ Underwriters and approvers resolve through Workforce Identity Federation, not a 
 
 Recency, not mere session validity, is the signal that matters for a privileged read. ADR-004 covers why. ADR-006 corrects where it is enforced, and the correction matters because the earlier version of this paragraph had the layers the wrong way round.
 
-**Access Context Manager reauthentication session controls are the enforcement.** A binding on the underwriter group sets a session length of one hour, which is the platform's floor rather than a tuned value: `--session-length` accepts `0s` or a duration between 1 hour and 24 hours. Because PAM is not documented as an independently targetable application for `scopedAccessSettings`, that binding covers the group's entire Google Cloud session and not just the credit-report path. Broad blast radius, real enforcement.
+**Access Context Manager reauthentication session controls are the enforcement.** A binding on the underwriter group sets a session length of one hour, which is the platform's floor rather than a tuned value: `--session-length` accepts `0s` or a duration between 1 hour and 24 hours. `scopedAccessSettings` narrows a binding to specific clients by OAuth `clientId` — "Cloud Console", "Google Cloud SDK" — but PAM has no distinct `clientId`; it is reached through the SDK or the REST API, so there is no way to scope the binding to the credit-report path alone. The binding therefore covers the group's entire Google Cloud session and not just the credit-report path. Broad blast radius, real enforcement.
 
-**The broker's 900-second check is evidence, not enforcement.** It reads `auth_time` and refuses anything staler than fifteen minutes, which rejects bad requests early and puts a tighter number in the ledger than the platform bound. It cannot be enforcement, because an underwriter who never calls the broker still reaches PAM. Whether a raw REST call to the PAM API is covered by a console-scoped ACM binding is `[verify against current GCP docs]`; the unnarrowed binding sidesteps the question.
+**The broker's 900-second check is evidence, not enforcement.** It reads `auth_time` and refuses anything staler than fifteen minutes, which rejects bad requests early and puts a tighter number in the ledger than the platform bound. It cannot be enforcement, because an underwriter who never calls the broker still reaches PAM. And skipping it forfeits no control: PAM independently refuses self-approval, caps the grant duration, and restricts eligibility, while ACM enforces recency — so the bypass path loses the 900-second evidence row, not a check. `scopedAccessSettings` targets clients by OAuth `clientId` ("Cloud Console", "Google Cloud SDK"), and the SDK binding does gate `gcloud pam grants create`; the one path a console/SDK-scoped binding may not reach is a raw REST call bearing a user token outside the SDK, which is why the unnarrowed binding — covering the group's whole session — is the safer default rather than an open question.
 
 ## Trust boundaries
 
@@ -107,7 +109,7 @@ Recency, not mere session validity, is the signal that matters for a privileged 
 | Underwriter → broker | Nobody by default | OIDC token shape + `auth_time` freshness, domain, SoD |
 | Broker → PAM | Broker SA, narrowly | SA holds PAM viewer only; it cannot create grants (ADR-006) |
 | PAM → bucket | The conditioned grant | IAM Condition: object prefix + time window |
-| Broker/reconcile → ledger | Broker SA (write), reconcile SA (read) | Reconcile cannot write access_grants except EXPIRE_FLAG rows |
+| Broker/reconcile → ledger | Broker SA (write), reconcile SA (read) | Reconcile cannot write access_grants except EXPIRE_FLAG and BYPASS_FLAG rows |
 
 ## What is deliberately out of scope for this build
 
@@ -117,5 +119,6 @@ These are next steps, not gaps hidden under the demo:
 - **CMEK** on the bucket and datasets, so key custody is separable from data custody.
 - **DLP content inspection** on reads, to catch a credit report that lands in the wrong object prefix.
 - **Automated containment**: wiring the reconcile flag to a real PAM grant revocation (ADR-005 open question).
+- **Ledger immutability — partly done.** The immutable copy is now built: `terraform/logging.tf` routes the platform-log export to a retention-locked GCS bucket (WORM). What remains out of scope is making the BigQuery ledger *itself* immutable — BigQuery IAM cannot express insert-only, so the ledger stays append-only-by-convention and leans on the WORM bucket and the independent export for tamper-evidence. Table snapshots would be the next step if the queryable copy also needed a locked history.
 - **A live IdP behind the JWKS verification path.** `verify_identity` already verifies the RS256 signature against the JWKS at `OIDC_JWKS_URI` (with issuer/audience/expiry); what remains is pointing those `OIDC_*` env vars at a real Workforce Identity Federation / IdP endpoint. Until then it is fail-closed and denies every request.
 - **Alerting**: routing the reconcile job's structured alert log to an on-call channel with a threshold.

@@ -86,6 +86,29 @@ variable "function_source_bucket_name" {
   default     = ""
 }
 
+variable "platform_logs_worm_bucket_name" {
+  type        = string
+  description = "Globally unique name for the GCS bucket holding the immutable (WORM) copy of the platform log export. Defaults to a project-scoped name."
+  default     = ""
+}
+
+variable "platform_log_retention_days" {
+  type        = number
+  description = "Days the WORM platform-log bucket retains each object. While the retention policy is locked, objects cannot be deleted or overwritten until this many days elapse. Default 7 keeps a demo teardown cheap; set to your regulatory floor in production (e.g. 2555 for a SOX/GLBA seven-year hold)."
+  default     = 7
+
+  validation {
+    condition     = var.platform_log_retention_days >= 1 && var.platform_log_retention_days <= 3650
+    error_message = "platform_log_retention_days must be between 1 and 3650 (ten years)."
+  }
+}
+
+variable "platform_logs_worm_locked" {
+  type        = bool
+  description = "Whether to LOCK the WORM bucket's retention policy. Locking is irreversible: once applied, the retention period can only be increased, objects cannot be deleted before it elapses, and the bucket cannot be destroyed until every object ages out. True is what makes the export genuine WORM; set false only for a throwaway demo you intend to tear down before retention expires."
+  default     = true
+}
+
 variable "labels" {
   type        = map(string)
   description = "Extra labels merged onto every labelable resource."

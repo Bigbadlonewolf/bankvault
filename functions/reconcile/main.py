@@ -14,6 +14,13 @@ reconstructs grant windows from those CreateGrant audit events and sweeps them, 
 sweep does not depend on a GRANT row that is never written. It also still reads any
 ledger GRANT rows, which keeps it correct for the pre-ADR-006 shape too.
 
+Second detection (bypass, ADR-006): because the broker is skippable, an underwriter can
+request a grant straight from PAM and never touch the pre-flight. Such a grant is issued
+without the broker's 15-minute auth_time evidence; its only freshness guarantee is the
+ACM 1h reauth floor. This job flags it (BYPASS_FLAG) by matching every reconstructed PAM
+grant against the broker's REQUEST rows. This is detect-only, like the overrun sweep: it
+records that the tighter evidence is absent, it does not deny anything.
+
 The BigQuery and PAM calls sit behind seams so the detection logic is unit-tested.
 """
 
@@ -115,6 +122,7 @@ def _reconstruct_grants(pam_events: list[dict], cfg: dict) -> list[dict]:
         application_id = _application_from_entitlement(event.get("entitlement_name"), prefix)
         grants.append({
             "request_id": grant_name,
+            "requester": event.get("requester"),
             "application_id": application_id,
             "resource_path": (
                 f"projects/_/buckets/{cfg['credit_bucket']}/objects/{application_id}/"
@@ -128,8 +136,54 @@ def _reconstruct_grants(pam_events: list[dict], cfg: dict) -> list[dict]:
 
 
 def _exclude_flagged(grants: list[dict], flagged_request_ids: set) -> list[dict]:
-    """Drop grants that already have an EXPIRE_FLAG close-out row."""
+    """Drop grants that already have a close-out flag row of the relevant type."""
     return [g for g in grants if g.get("request_id") not in flagged_request_ids]
+
+
+# --- Bypass detection (a grant that skipped the broker, ADR-006) --------------
+
+# The reason recorded on a BYPASS_FLAG row. Says exactly what is weaker: not that the
+# grant is invalid — PAM issued it to an eligible principal — but that the tighter,
+# 15-minute freshness evidence the broker would have recorded is absent, so recency
+# rests on the ACM 1h reauth floor alone.
+BYPASS_REASON = (
+    "BYPASS: PAM grant with no broker pre-flight REQUEST for this requester and "
+    "application. Freshness rests on the ACM 1h reauth floor only, not the broker's "
+    "15-minute auth_time evidence (ADR-004, ADR-006)."
+)
+
+
+def _request_key(requester, application_id):
+    """Correlation key shared by a broker REQUEST row and a reconstructed PAM grant.
+
+    Returns None when either half is missing: without both we cannot correlate, and a
+    grant we cannot correlate is not evidence of a bypass, so it is left unflagged.
+    """
+    if not requester or not application_id:
+        return None
+    return (requester.lower(), application_id)
+
+
+def find_bypassed_grants(pam_grants: list[dict], broker_request_keys: set) -> list[dict]:
+    """PAM grants whose (requester, application) never filed a broker REQUEST.
+
+    Heuristic by necessity: the broker and PAM share no request id (ADR-006), so an exact
+    grant->request correlation is impossible. The available signal is coarser — did this
+    requester ever clear the broker for this application. A grant whose key is absent from
+    the broker's REQUEST rows was issued without pre-flight, so its freshness evidence is
+    the ACM 1h floor, not the broker's 15-minute auth_time. False negative to accept
+    knowingly: an underwriter who used the broker once for an application, then bypassed it
+    for a later grant on the same application, matches on the key and is not flagged. The
+    marker catches the never-used-the-broker case, which is the one worth surfacing.
+    """
+    bypassed = []
+    for grant in pam_grants:
+        key = _request_key(grant.get("requester"), grant.get("application_id"))
+        if key is None:
+            continue
+        if key not in broker_request_keys:
+            bypassed.append(grant)
+    return bypassed
 
 
 # --- Seams (patched in tests) ------------------------------------------------
@@ -192,6 +246,32 @@ def _query_flagged_request_ids(cfg: dict) -> set:  # pragma: no cover - real que
     return {r["request_id"] for r in client.query(sql).result()}
 
 
+def _query_broker_request_keys(cfg: dict) -> set:  # pragma: no cover - real query
+    """(requested_by, application_id) of every broker REQUEST row.
+
+    The broker writes a REQUEST row for each pre-flight it clears (ADR-006). A PAM grant
+    whose (requester, application) never appears here reached PAM without the broker.
+    """
+    client = _bq_client()
+    table = f"{cfg['project_id']}.{cfg['audit_dataset']}.{cfg['ledger_table']}"
+    sql = f"""
+        SELECT DISTINCT LOWER(requested_by) AS requested_by, application_id
+        FROM `{table}`
+        WHERE action_type = 'REQUEST'
+          AND requested_by IS NOT NULL
+          AND application_id IS NOT NULL
+    """
+    return {(r["requested_by"], r["application_id"]) for r in client.query(sql).result()}
+
+
+def _query_flagged_bypass_ids(cfg: dict) -> set:  # pragma: no cover - real query
+    """request_ids that already have a BYPASS_FLAG row, so the sweep does not re-flag."""
+    client = _bq_client()
+    table = f"{cfg['project_id']}.{cfg['audit_dataset']}.{cfg['ledger_table']}"
+    sql = f"SELECT DISTINCT request_id FROM `{table}` WHERE action_type = 'BYPASS_FLAG'"
+    return {r["request_id"] for r in client.query(sql).result()}
+
+
 def _check_pam_grant_active(grant_name: str | None) -> bool:  # pragma: no cover - real API
     """Whether PAM still reports the grant active. VERIFY API semantics (ADR-001)."""
     if not grant_name:
@@ -204,13 +284,14 @@ def _check_pam_grant_active(grant_name: str | None) -> bool:  # pragma: no cover
     return state in {"ACTIVE", "APPROVED_AND_ASSIGNED", "APPROVED"}
 
 
-def _write_flag(cfg: dict, row: dict, reason: str) -> None:  # pragma: no cover - real write
+def _write_flag(cfg: dict, row: dict, reason: str, action_type: str = "EXPIRE_FLAG") -> None:  # pragma: no cover - real write
     client = _bq_client()
     table = f"{cfg['project_id']}.{cfg['audit_dataset']}.{cfg['ledger_table']}"
     flag = {
         "request_id": row["request_id"],
         "event_time": _now().isoformat(),
-        "action_type": "EXPIRE_FLAG",
+        "action_type": action_type,
+        "requested_by": row.get("requester"),
         "application_id": row.get("application_id"),
         "resource_path": row.get("resource_path"),
         "window_end": row.get("window_end").isoformat() if isinstance(row.get("window_end"), datetime) else row.get("window_end"),
@@ -239,10 +320,11 @@ def _alert(reason: str, row: dict) -> None:
 def reconcile(cfg: dict | None = None) -> dict:
     cfg = cfg or _config()
     ledger_grants = _query_open_grants(cfg)
-    pam_grants = _exclude_flagged(
-        _reconstruct_grants(_query_pam_grant_events(cfg), cfg),
-        _query_flagged_request_ids(cfg),
-    )
+    reconstructed = _reconstruct_grants(_query_pam_grant_events(cfg), cfg)
+
+    # Overrun sweep: a grant past its window that PAM still reports active, or a ledger
+    # gap. Excludes grants already carrying an EXPIRE_FLAG so the cron does not duplicate.
+    pam_grants = _exclude_flagged(reconstructed, _query_flagged_request_ids(cfg))
     open_grants = ledger_grants + pam_grants
     overruns = find_overruns(open_grants)
     flagged = 0
@@ -252,6 +334,18 @@ def reconcile(cfg: dict | None = None) -> dict:
         _write_flag(cfg, row, reason)
         _alert(reason, row)
         flagged += 1
+
+    # Bypass sweep (ADR-006): a reconstructed PAM grant whose requester never filed a
+    # broker REQUEST for that application skipped the pre-flight, so it carries no
+    # 15-minute auth_time evidence. Independent of the overrun state above, with its own
+    # BYPASS_FLAG idempotency so it is recorded once, not every 15-minute cron.
+    bypass_candidates = _exclude_flagged(reconstructed, _query_flagged_bypass_ids(cfg))
+    bypassed = find_bypassed_grants(bypass_candidates, _query_broker_request_keys(cfg))
+    for row in bypassed:
+        _write_flag(cfg, row, BYPASS_REASON, action_type="BYPASS_FLAG")
+        _alert(BYPASS_REASON, row)
+        flagged += 1
+
     return {"open_grants": len(open_grants), "flagged": flagged}
 
 
