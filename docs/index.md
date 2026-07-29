@@ -9,6 +9,12 @@ This site documents the architecture and the decisions behind it. The code lives
 - **[Architecture](architecture.md)** — the request path field by field, the two mechanisms that end access, and what is deliberately out of scope.
 - **[Compliance coverage](controls-mapping.md)** — each resource mapped to a specific GLBA, PCI DSS v4.0, SOX 404, or FFIEC control.
 
+## What it costs, and what it does not do
+
+- **[Break-glass](BREAK_GLASS.md)** — three options for what happens when PAM or the IdP is down, why none of them is implemented, and what each one costs operationally.
+- **[Session recording](SESSION_RECORDING.md)** — the boundary between object-read audit logging (present) and session recording (absent, and rejected on purpose in ADR-001).
+- **Cost estimate** — `COST_ESTIMATE.md` in the repository root: idle floor, per-request cost, and the one term that can surprise you.
+
 ## Architecture decision records
 
 Each ADR states its trade-offs and its unverified assumptions rather than burying them.

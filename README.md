@@ -115,7 +115,10 @@ bankvault/
 │   ├── index.md
 │   ├── architecture.md
 │   ├── controls-mapping.md        # GLBA / PCI DSS v4.0 / SOX 404 / FFIEC → specific resources
+│   ├── BREAK_GLASS.md             # what happens when PAM or the IdP is down; why nothing is implemented
+│   ├── SESSION_RECORDING.md       # object-read logging is present; session recording is not
 │   └── adr/001..006
+├── COST_ESTIMATE.md               # idle floor, per-request cost, and the term that can surprise you
 └── mkdocs.yml
 ```
 

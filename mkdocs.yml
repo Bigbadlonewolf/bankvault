@@ -27,7 +27,8 @@ nav:
   - Overview: index.md
   - Architecture: architecture.md
   - Compliance coverage: controls-mapping.md
-  - Interview defense: interview-defense.md
+  - Break-glass: BREAK_GLASS.md
+  - Session recording: SESSION_RECORDING.md
   - Decision records:
       - "ADR-001: Build vs. Buy, reversed": adr/001-build-vs-buy-jit-broker.md
       - "ADR-002: Two directories is one too many": adr/002-workforce-identity-federation-vs-iap.md

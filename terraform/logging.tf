@@ -100,7 +100,8 @@ resource "google_storage_bucket_iam_member" "worm_sink_writer" {
 # recorded anywhere. Enabling DATA_READ for Cloud Storage routes every object read
 # inside the grant window into Cloud Logging and the platform export, so what happens
 # during the 30 minutes is observed, not just that the grant existed
-# (docs/interview-defense.md).
+# (docs/SESSION_RECORDING.md). It is object-read logging, not session recording —
+# that boundary, and what production would need beyond it, is drawn in that doc.
 resource "google_project_iam_audit_config" "storage_data_read" {
   project = var.project_id
   service = "storage.googleapis.com"
