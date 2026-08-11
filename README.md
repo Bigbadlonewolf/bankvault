@@ -2,7 +2,7 @@
 
 Just-in-time privilege elevation for a mock mortgage lender's loan-origination pipeline. No underwriter holds standing access to borrower credit reports. Each approved request yields a time-bound grant scoped to one application's prefix, gated on a fresh multi-factor login, issued through Google Cloud **Privileged Access Manager (PAM)**, and recorded in an append-only BigQuery ledger.
 
-> **Status:** reference architecture. This repo is Terraform + Python + docs, verified with `terraform validate` and `pytest`. It is not a deployed GCP project. See [What this isn't](#what-this-isnt).
+> **Status:** reference architecture. Verified with `terraform validate` and `pytest`. `terraform plan` requires authenticated provider credentials and live API reads against PAM and GCS — not run. `terraform apply` is left to whoever has credentials.
 
 ## The problem it solves
 
