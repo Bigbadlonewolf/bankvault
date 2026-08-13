@@ -4,9 +4,12 @@ terraform {
   required_providers {
     google = {
       source = "hashicorp/google"
-      # PAM entitlement resource requires a recent provider. Verify this version
-      # ships google_privileged_access_manager_entitlement before apply (ADR-001).
-      version = ">= 5.30.0"
+      # Verified 2026-08-13: google_privileged_access_manager_entitlement landed in
+      # google-beta 5.28.0 and was promoted to the GA provider in 5.38.0, so the
+      # previous ">= 5.30.0" floor admitted eight GA minors that do not have the
+      # resource at all. 7.41.0 is what .terraform.lock.hcl already resolved and
+      # validates against; the major is bounded because v8 has no upgrade guide yet.
+      version = "~> 7.41"
     }
     archive = {
       source  = "hashicorp/archive"
