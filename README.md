@@ -2,7 +2,12 @@
 
 Just-in-time privilege elevation for a mock mortgage lender's loan-origination pipeline. No underwriter holds standing access to borrower credit reports. Each approved request yields a time-bound grant scoped to one application's prefix, gated on a fresh multi-factor login, issued through Google Cloud **Privileged Access Manager (PAM)**, and recorded in an append-only BigQuery ledger.
 
-> **Status:** reference architecture. Verified with `terraform validate` and `pytest`. `terraform plan` requires authenticated provider credentials and live API reads against PAM and GCS — not run. `terraform apply` is left to whoever has credentials.
+> **Status:** deployed to GCP, request path unwired. 42 Terraform resources
+> live in project `bankvault-demo` as of 2026-08-25, including both PAM
+> entitlements (`state: AVAILABLE`, verified via `gcloud beta pam
+> entitlements list`). The broker's OIDC verification is unconfigured, so it
+> denies every request — see Honest limits below. Verified with
+> `terraform validate`, `terraform apply`, and `pytest`.
 
 ## The problem it solves
 
@@ -201,5 +206,18 @@ Five claims in this repo are narrower than they look, and all five are stated on
 - **Not a real lender.** No core system, no real borrower data, no real underwriting workflow. It is a portfolio-grade demonstration of the JIT-access pattern on a plausible lending use case.
 - **Not wired to a real IdP.** Workforce Identity Federation is the documented identity plane (ADR-002), but no live SAML/OIDC provider is connected. `verify_identity` performs full OIDC verification — RS256 signature against the IdP JWKS, plus issuer, audience, and expiry — and binds the request to the verified identity claim rather than a self-asserted `requested_by`. It is **fail-closed**: with the `OIDC_ISSUER` / `OIDC_AUDIENCE` / `OIDC_JWKS_URI` env vars unset (as they are here, with no IdP connected), every request is denied. Wiring the JWKS endpoint to a live IdP is the remaining deployment step, not a code stub.
 - **The ACM reauth binding is documented, not provisioned.** The architecture diagram draws it as the enforcement layer because that is where enforcement belongs after ADR-006, but there is no `google_access_context_manager_*` resource in `terraform/`. It is an organization-level control that needs an access policy this project does not own. Until it is applied, the enforced-recency claim is a design position, not a deployed control — and the broker's 900s check is the only freshness logic actually present in this repo.
-- **Not deployed.** Verified with `fmt` / `validate` / `pytest`. `terraform apply` is left to whoever has credentials.
+- **Deployed, but with no live request path.** 42 resources are applied in
+  `bankvault-demo`: both Cloud Functions, both PAM entitlements with real
+  Cloud Identity principals and object-prefix CEL scoping, the WORM log
+  sink, the audit ledger, and the reconcile scheduler. What is *not*
+  demonstrated is a grant flowing end to end — the broker fails closed
+  (see above), so no request has ever reached PAM through it.
+- **Separation of duties is configured, not demonstrated.** The PAM
+  entitlements require an approver from `access-approvers@bigbadlonewolf.com`
+  who is not the requester, and `approval_workflow.require_approver_justification`
+  is set. In this deployment both that group and
+  `underwriting-leads@bigbadlonewolf.com` contain the same single identity,
+  so the control is present in configuration and cannot be exercised. Nothing
+  in Terraform enforces that the two groups differ — `variables.tf` says they
+  must, and a `validation` block would make that real.
 - **Not production-hardened.** No VPC Service Controls, no CMEK by default, no DLP content inspection, no alerting pipeline beyond the structured log the reconcile job emits. These are reasonable next steps, listed in [`docs/architecture.md`](docs/architecture.md), not gaps hidden under the demo.
