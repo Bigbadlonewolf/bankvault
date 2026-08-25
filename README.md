@@ -2,7 +2,7 @@
 
 Just-in-time privilege elevation for a mock mortgage lender's loan-origination pipeline. No underwriter holds standing access to borrower credit reports. Each approved request yields a time-bound grant scoped to one application's prefix, gated on a fresh multi-factor login, issued through Google Cloud **Privileged Access Manager (PAM)**, and recorded in an append-only BigQuery ledger.
 
-> **Status:** deployed to GCP, request path unwired. 42 Terraform resources
+> **Status:** deployed to GCP, request path unwired. 43 Terraform resources
 > live in project `bankvault-demo` as of 2026-08-25, including both PAM
 > entitlements (`state: AVAILABLE`, verified via `gcloud beta pam
 > entitlements list`). The broker's OIDC verification is unconfigured, so it
