@@ -42,6 +42,7 @@ locals {
     "cloudfunctions.googleapis.com",
     "run.googleapis.com",
     "cloudbuild.googleapis.com",
+    "artifactregistry.googleapis.com",
     "cloudscheduler.googleapis.com",
     "pubsub.googleapis.com",
     "logging.googleapis.com",
