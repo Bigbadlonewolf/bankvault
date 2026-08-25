@@ -37,7 +37,7 @@ resource "google_bigquery_table" "access_grants" {
     { name = "event_time", type = "TIMESTAMP", mode = "REQUIRED", description = "When this event was recorded." },
     { name = "action_type", type = "STRING", mode = "REQUIRED", description = "REQUEST | GRANT | DENY | EXPIRE_FLAG | BYPASS_FLAG. BYPASS_FLAG marks a PAM grant reconcile found with no broker pre-flight REQUEST (ADR-006)." },
     { name = "requested_by", type = "STRING", mode = "NULLABLE", description = "Underwriter email." },
-    { name = "approved_by", type = "STRING", mode = "NULLABLE", description = "Approver email." },
+    { name = "approved_by", type = "STRING", mode = "NULLABLE", description = "Approver email, SELF-ASSERTED." },
     { name = "application_id", type = "STRING", mode = "NULLABLE", description = "Loan application the access is scoped to." },
     { name = "resource_path", type = "STRING", mode = "NULLABLE", description = "Object prefix the grant pins to." },
     { name = "justification", type = "STRING", mode = "NULLABLE", description = "Requester's written reason." },
