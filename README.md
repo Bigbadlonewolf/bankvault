@@ -206,7 +206,7 @@ Five claims in this repo are narrower than they look, and all five are stated on
 - **Not a real lender.** No core system, no real borrower data, no real underwriting workflow. It is a portfolio-grade demonstration of the JIT-access pattern on a plausible lending use case.
 - **Not wired to a real IdP.** Workforce Identity Federation is the documented identity plane (ADR-002), but no live SAML/OIDC provider is connected. `verify_identity` performs full OIDC verification — RS256 signature against the IdP JWKS, plus issuer, audience, and expiry — and binds the request to the verified identity claim rather than a self-asserted `requested_by`. It is **fail-closed**: with the `OIDC_ISSUER` / `OIDC_AUDIENCE` / `OIDC_JWKS_URI` env vars unset (as they are here, with no IdP connected), every request is denied. Wiring the JWKS endpoint to a live IdP is the remaining deployment step, not a code stub.
 - **The ACM reauth binding is documented, not provisioned.** The architecture diagram draws it as the enforcement layer because that is where enforcement belongs after ADR-006, but there is no `google_access_context_manager_*` resource in `terraform/`. It is an organization-level control that needs an access policy this project does not own. Until it is applied, the enforced-recency claim is a design position, not a deployed control — and the broker's 900s check is the only freshness logic actually present in this repo.
-- **Deployed, but with no live request path.** 42 resources are applied in
+- **Deployed, but with no live request path.** 43 resources are applied in
   `bankvault-demo`: both Cloud Functions, both PAM entitlements with real
   Cloud Identity principals and object-prefix CEL scoping, the WORM log
   sink, the audit ledger, and the reconcile scheduler. What is *not*
@@ -220,4 +220,13 @@ Five claims in this repo are narrower than they look, and all five are stated on
   so the control is present in configuration and cannot be exercised. Nothing
   in Terraform enforces that the two groups differ — `variables.tf` says they
   must, and a `validation` block would make that real.
+- **The ledger's `approved_by` is self-asserted.** `validate_request` binds
+  `requested_by` to the verified OIDC identity, but `approved_by` is taken
+  from the request body and never checked against anything. The reconcile
+  sweep does not compare it to PAM's real approver in the admin-activity
+  log either. So a ledger row naming an approver is evidence that someone
+  typed that name, not that that person approved. The enforcing record is
+  PAM's own grant history; the ledger is a convenience copy alongside it.
+  Closing this means having reconcile read the PAM approval event and flag
+  rows where the two disagree.
 - **Not production-hardened.** No VPC Service Controls, no CMEK by default, no DLP content inspection, no alerting pipeline beyond the structured log the reconcile job emits. These are reasonable next steps, listed in [`docs/architecture.md`](docs/architecture.md), not gaps hidden under the demo.
